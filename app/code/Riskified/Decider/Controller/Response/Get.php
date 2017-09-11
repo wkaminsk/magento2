@@ -47,6 +47,12 @@ class Get extends \Magento\Framework\App\Action\Action
                     $statusCode = 400;
                     $msg = 'Could not find order to update.';
                 } else {
+                    $this->getRequest()->setParams(
+                        [
+                            "order_id" => $order->getId()
+                        ]
+                    );
+                    
                     $this->apiOrderLayer->update($order, $notification->status, $notification->oldStatus, $notification->description);
                     $statusCode = 200;
                     $msg = 'Order-Update event triggered.';
