@@ -14,8 +14,7 @@ class Get extends \Magento\Framework\App\Action\Action
         \Riskified\Decider\Api\Api $api,
         \Riskified\Decider\Api\Order $apiOrder,
         \Riskified\Decider\Api\Log $apiLogger
-    )
-    {
+    ) {
         parent::__construct($context);
         $this->api = $api;
         $this->apiLogger = $apiLogger;
@@ -47,12 +46,17 @@ class Get extends \Magento\Framework\App\Action\Action
                     $statusCode = 400;
                     $msg = 'Could not find order to update.';
                 } else {
+
+                    /**
+                     * Attaching order id to the request to solve multistore issues for Stripe payment method
+                    */
+
                     $this->getRequest()->setParams(
                         [
                             "order_id" => $order->getId()
                         ]
                     );
-                    
+
                     $this->apiOrderLayer->update($order, $notification->status, $notification->oldStatus, $notification->description);
                     $statusCode = 200;
                     $msg = 'Order-Update event triggered.';
