@@ -8,7 +8,6 @@ class Get extends \Magento\Framework\App\Action\Action
     private $apiOrderLayer;
     private $api;
     private $apiLogger;
-    private $order;
 
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
@@ -26,27 +25,25 @@ class Get extends \Magento\Framework\App\Action\Action
 
     public function execute()
     {
-
         $request = $this->getRequest();
         $response = $this->getResponse();
-        $logger = $this->apiLogger;
-        $logger->log("Start execute");
+
+        $this->apiLogger->log("Start execute");
         $statusCode = 200;
         $id = null;
         $msg = null;
-        $logger->log("Start Try");
         try {
             $notification = $this->api->parseRequest($request);
             $id = $notification->id;
             if ($notification->status == 'test' && $id == 0) {
                 $statusCode = 200;
                 $msg = 'Test notification received successfully';
-                $logger->log("Test Notification received: ", serialize($notification));
+                $this->apiLogger->log("Test Notification received: ", serialize($notification));
             } else {
-                $logger->log("Notification received: ", serialize($notification));
+                $this->apiLogger->log("Notification received: ", serialize($notification));
                 $order = $this->apiOrderLayer->loadOrderByOrigId($id);
                 if (!$order || !$order->getId()) {
-                    $logger->log("ERROR: Unable to load order (" . $id . ")");
+                    $this->apiLogger->log("ERROR: Unable to load order (" . $id . ")");
                     $statusCode = 400;
                     $msg = 'Could not find order to update.';
                 } else {
@@ -56,24 +53,26 @@ class Get extends \Magento\Framework\App\Action\Action
                 }
             }
         } catch (\Riskified\DecisionNotification\Exception\AuthorizationException $e) {
-            $logger->logException($e);
+            $this->apiLogger->logException($e);
             $statusCode = 401;
             $msg = 'Authentication Failed.';
         } catch (\Riskified\DecisionNotification\Exception\BadPostJsonException $e) {
-            $logger->logException($e);
+            $this->apiLogger->logException($e);
             $statusCode = 400;
             $msg = "JSON Parsing Error.";
         } catch (\Exception $e) {
-            $logger->log("ERROR: while processing notification for order $id");
-            $logger->logException($e);
+            $this->apiLogger->log("ERROR: while processing notification for order $id");
+            $this->apiLogger->logException($e);
             $statusCode = 500;
             $msg = "Internal Error";
         }
-        $logger->log($msg);
+
+        $this->apiLogger->log($msg);
         $response->setHttpResponseCode($statusCode);
         $response->setHeader('Content-Type', 'application/json');
         $response->setBody('{ "order" : { "id" : "' . $id . '", "description" : "' . $msg . '" } }');
         $response->sendResponse();
+
         exit;
     }
 }
