@@ -40,23 +40,24 @@ class Get extends \Magento\Framework\App\Action\Action
                 $this->apiLogger->log("Test Notification received: ", serialize($notification));
             } else {
                 $this->apiLogger->log("Notification received: ", serialize($notification));
+                $order_id = $this->apiOrderLayer->getRealOrderId($id);
+
+                /**
+                 * Attaching order id to the request to solve multistore issues for Stripe payment method
+                 */
+
+                $this->getRequest()->setParams(
+                    [
+                        "order_id" => $order_id
+                    ]
+                );
+
                 $order = $this->apiOrderLayer->loadOrderByOrigId($id);
                 if (!$order || !$order->getId()) {
                     $this->apiLogger->log("ERROR: Unable to load order (" . $id . ")");
                     $statusCode = 400;
                     $msg = 'Could not find order to update.';
                 } else {
-
-                    /**
-                     * Attaching order id to the request to solve multistore issues for Stripe payment method
-                    */
-
-                    $this->getRequest()->setParams(
-                        [
-                            "order_id" => $order->getId()
-                        ]
-                    );
-
                     $this->apiOrderLayer->update($order, $notification->status, $notification->oldStatus, $notification->description);
                     $statusCode = 200;
                     $msg = 'Order-Update event triggered.';

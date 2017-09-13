@@ -226,6 +226,29 @@ class Order
         return;
     }
 
+    /**
+     * Retrieves magento order ID based on provided Riskified ID
+     *
+     * @param $full_orig_id string Provided ID from Riskified API
+     * @return bool|null
+     */
+    public function getRealOrderId($full_orig_id)
+    {
+        if (!$full_orig_id) {
+            return null;
+        }
+
+        $magento_ids = explode("_", $full_orig_id);
+
+        $order_id = false;
+
+        if (isset($magento_ids[0])) {
+            $order_id = $magento_ids[0];
+        }
+
+        return $order_id;
+    }
+
     public function loadOrderByOrigId($full_orig_id)
     {
         if (!$full_orig_id) {
