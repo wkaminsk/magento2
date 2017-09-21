@@ -81,12 +81,6 @@ class AutoInvoice implements ObserverInterface
      * @var State
      */
     protected $state;
-
-    /**
-     * Scope config class
-     *
-     * @var ScopeInterface
-     */
     protected $scopeConfig;
 
     /**
@@ -171,6 +165,7 @@ class AutoInvoice implements ObserverInterface
 
             return $this;
         }
+
         try {
             $this->updateStripeApiConnection($order);
         } catch (\Exception $e) {
@@ -179,6 +174,7 @@ class AutoInvoice implements ObserverInterface
             );
             return $this;
         }
+
         $invoice = $this->state->emulateAreaCode(
             'adminhtml',
             [$this->invoiceService, 'prepareInvoice'],
@@ -203,7 +199,7 @@ class AutoInvoice implements ObserverInterface
                     false,
                     false
                 );
-            
+
             $this->state->emulateAreaCode(
                 'adminhtml',
                 [$invoice, 'register']
@@ -213,15 +209,8 @@ class AutoInvoice implements ObserverInterface
             return $this;
         }
         try {
-            $this->state->emulateAreaCode(
-                'adminhtml',
-                [$invoice, 'save']
-            );
-
-            $this->state->emulateAreaCode(
-                'adminhtml',
-                [$invoice->getOrder(), 'save']
-            );
+            $invoice->save();
+            $invoice->getOrder()->save();
         } catch (\Exception $e) {
             $this->logger->addCritical(
                 'Error creating transaction: ' . $e->getMessage()
@@ -250,11 +239,6 @@ class AutoInvoice implements ObserverInterface
         return true;
     }
 
-    /**
-     * Methods prepares stripe api to handle stripe capture for multi store installations
-     *
-     * @param \Magento\Sales\Model\Order $order
-     */
     private function updateStripeApiConnection($order)
     {
         if (class_exists("\Stripe\Stripe")) {
