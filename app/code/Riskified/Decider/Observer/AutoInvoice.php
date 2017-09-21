@@ -81,6 +81,11 @@ class AutoInvoice implements ObserverInterface
      * @var State
      */
     protected $state;
+    /**
+     * Scope config class
+     *
+     * @var ScopeInterface
+     */
     protected $scopeConfig;
 
     /**
@@ -239,6 +244,11 @@ class AutoInvoice implements ObserverInterface
         return true;
     }
 
+    /**
+     * Method prepares stripe api to handle stripe capture for multi store installations
+     *
+     * @param $order
+     */
     private function updateStripeApiConnection($order)
     {
         if (class_exists("\Stripe\Stripe")) {
