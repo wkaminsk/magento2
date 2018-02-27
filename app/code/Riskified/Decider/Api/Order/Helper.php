@@ -1,4 +1,5 @@
 <?php
+
 namespace Riskified\Decider\Api\Order;
 
 use Riskified\OrderWebhook\Model;
@@ -167,7 +168,7 @@ class Helper
                     $brand = $product->getResource()->getAttribute('manufacturer')->getFrontend()->getValue($product);
                 }
             }
-            $line_items[] = new Model\LineItem(array_filter(array(
+            $lineItemsDataArray = array_filter(array(
                 'price' => $item->getPrice(),
                 'quantity' => intval($item->getQtyOrdered()),
                 'title' => $item->getName(),
@@ -178,7 +179,11 @@ class Helper
                 'brand'	=> $brand,
                 'category' => (isset($categories) && count($categories) > 0) ? implode('|', $categories) : '',
                 'sub_category' => (isset($sub_categories) && count($sub_categories) > 0) ? implode('|', $sub_categories) : ''
-            ), 'strlen'));
+            ), 'strlen');
+
+            $lineItemsDataArray['requires_shipping'] = (bool)!$item->getIsVirtual();
+
+            $line_items[] = new Model\LineItem($lineItemsDataArray);
         }
         return $line_items;
     }
@@ -194,7 +199,7 @@ class Helper
 
         $firstName = $address->getFirstname();
 
-        if(is_object($firstName)) {
+        if (is_object($firstName)) {
             $firstName = $firstName->getText();
         }
 
@@ -321,7 +326,7 @@ class Helper
                     break;
                 case 'payflowpro':
                     $cc_details = $payment->getAdditionalInformation('cc_details');
-                    $credit_card_number =  $cc_details['cc_last_4'];
+                    $credit_card_number = $cc_details['cc_last_4'];
                     $credit_card_company = $cc_details['cc_type'];
                     $cvv_result_code = $payment->getAdditionalInformation('cvv2match');
                     $houseVerification = $payment->getAdditionalInformation('avsaddr');
@@ -431,9 +436,10 @@ class Helper
         return ($dateStr == NULL) ? NULL : date('c', strtotime($dateStr));
     }
 
-    public function isAdmin() {
+    public function isAdmin()
+    {
         $om = \Magento\Framework\App\ObjectManager::getInstance();
-        $state =  $om->get('Magento\Framework\App\State');
+        $state = $om->get('Magento\Framework\App\State');
 
         return $state->getAreaCode() === 'adminhtml';
     }
