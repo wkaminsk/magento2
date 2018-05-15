@@ -14,8 +14,7 @@ class OrderPaymentRefund implements ObserverInterface
         \Riskified\Decider\Api\Log $logger,
         \Riskified\Decider\Api\Order $orderApi,
         \Magento\Framework\Message\ManagerInterface $messageManager
-    )
-    {
+    ) {
         $this->logger = $logger;
         $this->apiOrderLayer = $orderApi;
         $this->messageManager = $messageManager;
@@ -26,7 +25,7 @@ class OrderPaymentRefund implements ObserverInterface
         try {
             $order = $observer->getPayment()->getOrder();
             $this->apiOrderLayer->post($order, Api::ACTION_CANCEL);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(
                 __("Riskified API Respond : %1", $e->getMessage())
             );
