@@ -214,6 +214,40 @@
                     </comment>
                 </field>
             </group>
+            <group id="deco_configuration" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1"
+                   showInStore="1">
+                <label>Deco Configuration</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1"
+                       showInStore="1">
+                    <label>Module Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="*/riskified_general/enabled">1</field>
+                    </depends>
+                </field>
+                <field id="environment_type" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1"
+                       showInStore="1">
+                    <label>Environment Type</label>
+                    <source_model>Riskified\Decider\Config\Source\Deco\Env</source_model>
+                    <depends>
+                        <field id="*/riskified_general/enabled">1</field>
+                    </depends>
+                </field>
+                <field id="button_color" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>Deco's widget color</label>
+                    <comment><![CDATA[Button color]]></comment>
+                    <frontend_model>Riskified\Decider\Block\Config\Color</frontend_model>
+                </field>
+                <field id="button_text_color" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>Deco's widget text color</label>
+                    <comment><![CDATA[Button text color]]></comment>
+                    <frontend_model>Riskified\Decider\Block\Config\Color</frontend_model>
+                </field>
+                <field id="logo_url" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="0" showInStore="1">
+                    <label>Logo Url</label>
+                    <comment><![CDATA[Logo shown in the Deco pop up]]></comment>
+                </field>
+            </group>
         </section>
     </system>
 </config>
