@@ -26,7 +26,8 @@ class UpdateOrderState implements ObserverInterface
         \Riskified\Decider\Api\Log $logger,
         \Riskified\Decider\Api\Config $config,
         \Riskified\Decider\Api\Order\Config $apiOrderConfig,
-        \Riskified\Decider\Api\Order $orderApi
+        \Riskified\Decider\Api\Order $orderApi,
+        \Magento\Framework\App\ResourceConnection $resource
     ) {
         $this->logger = $logger;
         $this->apiOrderConfig = $apiOrderConfig;

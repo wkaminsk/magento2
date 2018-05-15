@@ -87,7 +87,12 @@ class Order
                     $checkoutForTransport = $this->loadQuote($order);
                     $response = $transport->deniedCheckout($checkoutForTransport);
                     break;
+                case Api::ACTION_CHECKOUT_CREATE:
+                    $checkoutForTransport = $this->loadQuote($order);
+                    $response = $transport->createCheckout($checkoutForTransport);
+                    break;
             }
+
             $eventData['response'] = $response;
 
             $this->_eventManager->dispatch(

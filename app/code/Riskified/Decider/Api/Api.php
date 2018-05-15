@@ -16,6 +16,7 @@ class Api
     const ACTION_SUBMIT = 'submit';
     const ACTION_CANCEL = 'cancel';
     const ACTION_CHECKOUT_DENIED = 'checkout_denied';
+    const ACTION_CHECKOUT_CREATE = 'checkout_create';
 
     private $version;
     private $_apiConfig;
