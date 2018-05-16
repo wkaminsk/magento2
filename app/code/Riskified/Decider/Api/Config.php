@@ -63,6 +63,17 @@ class Config
             );
     }
 
+    /**
+     * @return string
+     */
+    public function getConfigDecoEnv()
+    {
+        return $this->_scopeConfig->getValue(
+            'riskified/deco_configuration/environment_type',
+            ScopeInterface::SCOPE_STORES
+        );
+    }
+
     public function getSessionId()
     {
         return $this->checkoutSession->getQuoteId();
@@ -237,5 +248,13 @@ class Config
             'riskified/decline_notification/content',
             ScopeInterface::SCOPE_STORES
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDecoEnabled()
+    {
+        return (bool)$this->_scopeConfig->getValue('riskified/deco_configuration/enabled');
     }
 }

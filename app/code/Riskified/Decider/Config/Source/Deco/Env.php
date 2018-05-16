@@ -4,9 +4,9 @@ namespace Riskified\Decider\Config\Source\Deco;
 
 class Env implements \Magento\Framework\Option\ArrayInterface
 {
-    const SANDBOX = 'https://sandboxw.decopayments.com';
-    const STAGING = 'https://stagingw.decopayments.com';
-    const PRODUCTION = 'https://w.decopayments.com';
+    const SANDBOX = 'sandboxw.decopayments.com';
+    const STAGING = 'stagingw.decopayments.com';
+    const PRODUCTION = 'w.decopayments.com';
 
     /**
      * Options getter
