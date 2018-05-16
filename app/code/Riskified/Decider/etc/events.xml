@@ -29,4 +29,8 @@
         <observer name="riskified_decider_checkout_create"
                   instance="Riskified\Decider\Observer\CheckoutCreate"/>
     </event>
+    <event name="riskified_decider_post_eligible_success">
+        <observer name="riskified_decider_post_eligible_success"
+                  instance="Riskified\Decider\Observer\EligibleSuccessfulPost"/>
+    </event>
 </config>

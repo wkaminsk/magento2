@@ -5,10 +5,13 @@ namespace Riskified\Decider\Api;
 use Riskified\OrderWebhook\Transport\CurlTransport;
 use Riskified\Common\Signature;
 use Riskified\OrderWebhook\Model;
+use Magento\Framework\App\Helper\Context;
 
 class Deco
 {
     const ACTION_ELIGIBLE = 'eligible';
+    const STATUS_ELIGIBLE = 'eligible';
+    const STATUS_NOT_ELIGIBLE = 'not_eligible';
 
     /**
      * @var Config
@@ -20,22 +23,26 @@ class Deco
      */
     protected $api;
 
-    protected $logger;
+    /**
+     * @var \Magento\Framework\Event\ManagerInterface
+     */
+    private $_eventManager;
 
     /**
      * Deco constructor.
      *
      * @param Config $apiConfig
      * @param Api $api
+     * @param Context $context
      */
     public function __construct(
         Config $apiConfig,
         Api $api,
-        \Psr\Log\LoggerInterface $logger
+        Context $context
     ) {
         $this->apiConfig = $apiConfig;
         $this->api = $api;
-        $this->logger = $logger;
+        $this->_eventManager = $context->getEventManager();
 
         $this->api->initSdk();
     }
@@ -65,6 +72,11 @@ class Deco
             throw new \Exception("Order doesn't not exists");
         }
 
+        $eventData = array(
+            'order' => $order,
+            'action' => $action
+        );
+
         try {
             switch ($action) {
                 case self::ACTION_ELIGIBLE:
@@ -72,12 +84,18 @@ class Deco
                     $response = $transport->isEligible($orderForTransport);
                     break;
             }
+
+            $eventData['response'] = $response;
+
+            $this->_eventManager->dispatch(
+                'riskified_decider_post_eligible_success',
+                $eventData
+            );
         } catch (\Riskified\OrderWebhook\Exception\CurlException $curlException) {
             throw $curlException;
         } catch (\Exception $e) {
             throw $e;
         }
-        $this->logger->info($response);
 
         return $response;
     }
