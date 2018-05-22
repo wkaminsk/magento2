@@ -51,4 +51,12 @@ class Js extends Template
     {
         return $this->apiConfig->getConfigBeaconUrl();
     }
+
+    /**
+     * @return bool
+     */
+    public function isDecoEnabled()
+    {
+        return $this->apiConfig->isDecoEnabled();
+    }
 }

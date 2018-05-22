@@ -53,14 +53,9 @@ class OrderPaymentFailed implements ObserverInterface
         $order = $observer->getEvent()->getOrder();
 
         try {
-//            $this->apiOrderLayer->post(
-//                $order,
-//                Api::ACTION_CHECKOUT_DENIED
-//            );
-
-            $this->deco->post(
+            $this->apiOrderLayer->post(
                 $order,
-                Deco::ACTION_ELIGIBLE
+                Api::ACTION_CHECKOUT_DENIED
             );
         } catch (\Exception $e) {
             $this->logger->logException($e);

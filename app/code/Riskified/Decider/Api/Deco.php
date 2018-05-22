@@ -48,7 +48,7 @@ class Deco
     }
 
     /**
-     * @param $order
+     * @param $quoteId
      * @param $action
      *
      * @return $this|mixed
@@ -56,7 +56,7 @@ class Deco
      * @throws \Exception
      * @throws \Riskified\OrderWebhook\Exception\CurlException
      */
-    public function post($order, $action)
+    public function post($quoteId, $action)
     {
         if (!$this->apiConfig->isEnabled()) {
             return $this;
@@ -68,19 +68,19 @@ class Deco
 
         $transport = $this->getTransport();
 
-        if (!$order) {
+        if (!$quoteId) {
             throw new \Exception("Order doesn't not exists");
         }
 
         $eventData = array(
-            'order' => $order,
+            'quote_id' => $quoteId,
             'action' => $action
         );
 
         try {
             switch ($action) {
                 case self::ACTION_ELIGIBLE:
-                    $orderForTransport = $this->load($order);
+                    $orderForTransport = $this->load($quoteId);
                     $response = $transport->isEligible($orderForTransport);
                     break;
             }
@@ -101,13 +101,13 @@ class Deco
     }
 
     /**
-     * @param $order
+     * @param $quoteId
      * @return Model\Order
      */
-    private function load($order)
+    private function load($quoteId)
     {
         $order_array = array(
-            'id' => $order->getQuoteId(),
+            'id' => $quoteId,
         );
 
         $order = new Model\Order(array_filter($order_array, 'strlen'));

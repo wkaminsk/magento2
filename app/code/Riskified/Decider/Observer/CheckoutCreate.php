@@ -20,11 +20,11 @@ class CheckoutCreate implements ObserverInterface
     /**
      * CheckoutCreate constructor.
      *
-     * @param \Riskified\Decider\Api\Log $logger
+     * @param \Riskified\Decider\Logger\Order $logger
      * @param \Riskified\Decider\Api\Order $orderApi
      */
     public function __construct(
-        \Riskified\Decider\Api\Log $logger,
+        \Riskified\Decider\Logger\Order $logger,
         \Riskified\Decider\Api\Order $orderApi
     ) {
         $this->logger = $logger;
