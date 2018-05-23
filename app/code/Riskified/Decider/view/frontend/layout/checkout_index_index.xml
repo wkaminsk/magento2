@@ -2,6 +2,7 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
         <script src="Riskified_Decider::js/checkout.js"/>
+        <css src="Riskified_Decider::css/deco.css"/>
     </head>
     <body>
         <referenceContainer name="before.body.end">
@@ -20,10 +21,14 @@
                                             <item name="children" xsi:type="array">
                                                 <item name="payment" xsi:type="array">
                                                     <item name="children" xsi:type="array">
-                                                        <item name="afterMethods" xsi:type="array">
+                                                        <item name="payments-list" xsi:type="array">
                                                             <item name="children" xsi:type="array">
-                                                                <item name="deco" xsi:type="array">
-                                                                    <item name="component" xsi:type="string">Riskified_Decider/js/deco</item>
+                                                                <item name="before-place-order" xsi:type="array">
+                                                                    <item name="children" xsi:type="array">
+                                                                        <item name="deco" xsi:type="array">
+                                                                            <item name="component" xsi:type="string">Riskified_Decider/js/deco</item>
+                                                                        </item>
+                                                                    </item>
                                                                 </item>
                                                             </item>
                                                         </item>

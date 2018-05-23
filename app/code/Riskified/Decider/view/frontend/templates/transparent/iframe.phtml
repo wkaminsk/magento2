@@ -39,7 +39,17 @@ $params = $block->getParams();
             function($, globalMessageList, $t, fullScreenLoader, eligible) {
                 var parent = window.top;
                 $(parent).trigger('clearTimeout');
-                eligible.paymentFail();
+                eligible.paymentFail(
+                    "<?php echo \Magento\Framework\App\ObjectManager::getInstance()
+                        ->get('Magento\Framework\App\Config\ScopeConfigInterface')
+                        ->getValue('riskified/deco_configuration/button_color')?>",
+                    "<?php echo \Magento\Framework\App\ObjectManager::getInstance()
+                        ->get('Magento\Framework\App\Config\ScopeConfigInterface')
+                        ->getValue('riskified/deco_configuration/button_text_color')?>",
+                    "<?php echo \Magento\Framework\App\ObjectManager::getInstance()
+                        ->get('Magento\Framework\App\Config\ScopeConfigInterface')
+                        ->getValue('riskified/deco_configuration/logo_url')?>"
+                );
                 fullScreenLoader.stopLoader();
                 globalMessageList.addErrorMessage({
                     message: $t('An error occurred on the server. Please try to place the order again. deco deco')
