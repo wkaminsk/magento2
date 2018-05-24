@@ -27,4 +27,8 @@
         <observer name="riskified_decider_checkout_denied"
                   instance="Riskified\Decider\Observer\OrderPaymentFailed"/>
     </event>
+    <event name="riskified_decider_order_uncancel">
+        <observer name="riskified_decider_order_uncancel"
+                  instance="Riskified\Decider\Observer\UnCancelOrder"/>
+    </event>
 </config>

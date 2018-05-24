@@ -66,15 +66,12 @@ class IsEligible extends Action
                 $params['quote_id'],
                 Deco::ACTION_ELIGIBLE
             );
-            $resultJson->setData([
+
+            return $resultJson->setData([
                 'success' => true,
                 'status' => $response->order->status,
                 'message' => $response->order->description
             ]);
-
-            $this->logger->log($resultJson);
-
-            return $resultJson;
         } catch (\Exception $e) {
             $this->logger->logException($e);
 

@@ -10,6 +10,7 @@ use Magento\Framework\App\Helper\Context;
 class Deco
 {
     const ACTION_ELIGIBLE = 'eligible';
+    const ACTION_OPT_IN = 'opt_in';
     const STATUS_ELIGIBLE = 'eligible';
     const STATUS_NOT_ELIGIBLE = 'not_eligible';
 
@@ -83,6 +84,11 @@ class Deco
                     $orderForTransport = $this->load($quoteId);
                     $response = $transport->isEligible($orderForTransport);
                     break;
+
+                case self::ACTION_OPT_IN:
+                    $orderForTransport = $this->load($quoteId);
+                    $response = $transport->optIn($orderForTransport);
+                    break;
             }
 
             $eventData['response'] = $response;
@@ -110,7 +116,7 @@ class Deco
             'id' => $quoteId,
         );
 
-        $order = new Model\Order(array_filter($order_array, 'strlen'));
+        $order = new Model\Checkout(array_filter($order_array, 'strlen'));
 
         return $order;
     }

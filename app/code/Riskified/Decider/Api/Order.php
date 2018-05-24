@@ -376,4 +376,17 @@ class Order
 
         return $i;
     }
+
+    public function unCancelOrder($order, $comment)
+    {
+        $eventData = array(
+            'order' => $order,
+            'comment' => $comment
+        );
+
+        $this->_eventManager->dispatch(
+            'riskified_decider_order_uncancel',
+            $eventData
+        );
+    }
 }

@@ -2,19 +2,24 @@ define([
     'jquery',
     'ko',
     'Magento_Checkout/js/model/quote',
-    'mage/storage'
-], function ($, ko, quote, storage) {
+    'mage/storage',
+    'Magento_Checkout/js/action/redirect-on-success',
+    'Magento_Checkout/js/checkout-data'
+], function ($, ko, quote, storage, redirectOnSuccessAction, checkoutData) {
     'use strict';
 
     function optInCall() {
         storage.post(
             'decider/deco/optIn',
             JSON.stringify({
-                quote_id: quote.getQuoteId()
+                quote_id: quote.getQuoteId(),
+                payment_method: checkoutData.getSelectedPaymentMethod()
             }),
             true
         ).done(function (result) {
-
+            if (result.status == 'opt_in') {
+                redirectOnSuccessAction.execute();
+            }
         });
     }
 
@@ -28,7 +33,7 @@ define([
                 true
             ).done(function (result) {
                 if (result.status == 'eligible') {
-                    $('#deco-container').html("<div id='deco-widget'></div>");
+                    $('.payment-method._active #deco-container').html("<div id='deco-widget'></div>");
                     window.drawDecoWidget(() => {
                         return optInCall();
                     }, {
