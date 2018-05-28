@@ -3,7 +3,6 @@
 namespace Riskified\Decider\Controller\Deco;
 
 use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\ResponseInterface;
 use Riskified\Decider\Api\Deco;
 
 class IsEligible extends Action
@@ -22,10 +21,11 @@ class IsEligible extends Action
      * @var Deco
      */
     private $deco;
+
     /**
-     * @var \Magento\Framework\Json\Helper\Data
+     * @var \Magento\Checkout\Model\Session
      */
-    private $helper;
+    private $checkoutSession;
 
     /**
      * IsEligible constructor.
@@ -34,21 +34,21 @@ class IsEligible extends Action
      * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
      * @param Deco $deco
      * @param \Riskified\Decider\Api\Log $logger
-     * @param \Magento\Framework\Json\Helper\Data $helper
+     * @param \Magento\Checkout\Model\Session $checkoutSession
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
         \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
         Deco $deco,
         \Riskified\Decider\Api\Log $logger,
-        \Magento\Framework\Json\Helper\Data $helper
+        \Magento\Checkout\Model\Session $checkoutSession
     ) {
         parent::__construct($context);
 
         $this->resultJsonFactory = $resultJsonFactory;
         $this->deco = $deco;
         $this->logger = $logger;
-        $this->helper = $helper;
+        $this->checkoutSession = $checkoutSession;
     }
 
     /**
@@ -58,12 +58,11 @@ class IsEligible extends Action
      */
     public function execute()
     {
-        $params = $this->helper->jsonDecode($this->getRequest()->getContent());
         $resultJson = $this->resultJsonFactory->create();
         try {
-            $this->logger->log('Deco isEligible request, quote_id: ' . $params['quote_id']);
+            $this->logger->log('Deco isEligible request, quote_id: ' . $this->checkoutSession->getQuoteId());
             $response = $this->deco->post(
-                $params['quote_id'],
+                $this->checkoutSession->getQuoteId(),
                 Deco::ACTION_ELIGIBLE
             );
 

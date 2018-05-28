@@ -21,14 +21,21 @@ class OptIn extends Action
      * @var Deco
      */
     private $deco;
-    /**
-     * @var \Magento\Framework\Json\Helper\Data
-     */
-    private $helper;
 
+    /**
+     * @var \Magento\Framework\Session\SessionManager
+     */
     private $sessionManager;
 
+    /**
+     * @var \Riskified\Decider\Api\Order
+     */
     private $api;
+
+    /**
+     * @var \Magento\Checkout\Model\Session
+     */
+    private $checkoutSession;
 
     /**
      * IsEligible constructor.
@@ -37,25 +44,25 @@ class OptIn extends Action
      * @param \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory
      * @param Deco $deco
      * @param \Riskified\Decider\Api\Log $logger
-     * @param \Magento\Framework\Json\Helper\Data $helper
+     * @param \Magento\Checkout\Model\Session $checkoutSession
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
         \Magento\Framework\Controller\Result\JsonFactory $resultJsonFactory,
         Deco $deco,
         \Riskified\Decider\Api\Log $logger,
-        \Magento\Framework\Json\Helper\Data $helper,
         \Magento\Framework\Session\SessionManager $sessionManager,
-        \Riskified\Decider\Api\Order $api
+        \Riskified\Decider\Api\Order $api,
+        \Magento\Checkout\Model\Session $checkoutSession
     ) {
         parent::__construct($context);
 
         $this->resultJsonFactory = $resultJsonFactory;
         $this->deco = $deco;
         $this->logger = $logger;
-        $this->helper = $helper;
         $this->sessionManager = $sessionManager;
         $this->api = $api;
+        $this->checkoutSession = $checkoutSession;
     }
 
     /**
@@ -63,18 +70,17 @@ class OptIn extends Action
      */
     public function execute()
     {
-        $params = $this->helper->jsonDecode($this->getRequest()->getContent());
         $resultJson = $this->resultJsonFactory->create();
 
         try {
-            $this->logger->log('Deco OptIn request, quote_id: ' . $params['quote_id']);
+            $this->logger->log('Deco OptIn request, quote_id: ' . $this->checkoutSession->getQuoteId());
             $response = $this->deco->post(
-                $params['quote_id'],
+                $this->checkoutSession->getQuoteId(),
                 Deco::ACTION_OPT_IN
             );
 
             if ($response->order->status == 'opt_in') {
-                $this->processOrder($params['payment_method']);
+                $this->processOrder($this->checkoutSession->getQuote()->getPayment()->getMethod());
             }
 
             return $resultJson->setData([
