@@ -33,4 +33,7 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Sales\Api\OrderManagementInterface">
+        <plugin name="riskified_decider_sales_order_place" type="Riskified\Decider\Plugin\OrderServicePlugin" sortOrder="5"/>
+    </type>
 </config>

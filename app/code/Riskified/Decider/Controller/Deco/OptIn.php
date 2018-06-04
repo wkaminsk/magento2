@@ -4,6 +4,7 @@ namespace Riskified\Decider\Controller\Deco;
 
 use Magento\Framework\App\Action\Action;
 use Riskified\Decider\Api\Deco;
+use Riskified\Decider\Api\Api;
 
 class OptIn extends Action
 {
@@ -37,6 +38,8 @@ class OptIn extends Action
      */
     private $checkoutSession;
 
+    private $orderApi;
+
     /**
      * IsEligible constructor.
      *
@@ -53,7 +56,8 @@ class OptIn extends Action
         \Riskified\Decider\Api\Log $logger,
         \Magento\Framework\Session\SessionManager $sessionManager,
         \Riskified\Decider\Api\Order $api,
-        \Magento\Checkout\Model\Session $checkoutSession
+        \Magento\Checkout\Model\Session $checkoutSession,
+        \Riskified\Decider\Api\Order $orderApi
     ) {
         parent::__construct($context);
 
@@ -63,6 +67,7 @@ class OptIn extends Action
         $this->sessionManager = $sessionManager;
         $this->api = $api;
         $this->checkoutSession = $checkoutSession;
+        $this->orderApi = $orderApi;
     }
 
     /**
@@ -75,12 +80,17 @@ class OptIn extends Action
         try {
             $this->logger->log('Deco OptIn request, quote_id: ' . $this->checkoutSession->getQuoteId());
             $response = $this->deco->post(
-                $this->checkoutSession->getQuoteId(),
+                $this->checkoutSession->getLastRealOrder(),
                 Deco::ACTION_OPT_IN
             );
 
             if ($response->order->status == 'opt_in') {
                 $this->processOrder($this->checkoutSession->getQuote()->getPayment()->getMethod());
+
+                $this->orderApi->post(
+                    $this->checkoutSession->getLastRealOrder(),
+                    Api::ACTION_CREATE
+                );
             }
 
             return $resultJson->setData([

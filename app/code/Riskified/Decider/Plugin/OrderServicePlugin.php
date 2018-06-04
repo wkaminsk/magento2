@@ -1,11 +1,10 @@
 <?php
 
-namespace Riskified\Decider\Observer;
+namespace Riskified\Decider\Plugin;
 
-use Magento\Framework\Event\ObserverInterface;
 use Riskified\Decider\Api\Api;
 
-class CheckoutCreate implements ObserverInterface
+class OrderServicePlugin
 {
     /**
      * @var \Riskified\Decider\Api\Log
@@ -31,14 +30,12 @@ class CheckoutCreate implements ObserverInterface
         $this->apiOrderLayer = $orderApi;
     }
 
-    /**
-     * @param \Magento\Framework\Event\Observer $observer
-     *
-     * @return $this
-     */
-    public function execute(\Magento\Framework\Event\Observer $observer)
-    {
-        $order = $observer->getOrder();
+    public function aroundPlace(
+        \Magento\Sales\Model\Service\OrderService $subject,
+        \Closure $proceed,
+        \Magento\Sales\Api\Data\OrderInterface $order
+    ) {
+        $return = $proceed($order);
 
         try {
             $this->apiOrderLayer->post($order, Api::ACTION_CHECKOUT_CREATE);
@@ -46,6 +43,6 @@ class CheckoutCreate implements ObserverInterface
             $this->logger->logException($e);
         }
 
-        return $this;
+        return $return;
     }
 }

@@ -30,6 +30,11 @@ class Deco
     private $_eventManager;
 
     /**
+     * @var \Riskified\Decider\Api\Order\Helper
+     */
+    private $_orderHelper;
+
+    /**
      * Deco constructor.
      *
      * @param Config $apiConfig
@@ -39,17 +44,19 @@ class Deco
     public function __construct(
         Config $apiConfig,
         Api $api,
-        Context $context
+        Context $context,
+        \Riskified\Decider\Api\Order\Helper $orderHelper
     ) {
         $this->apiConfig = $apiConfig;
         $this->api = $api;
         $this->_eventManager = $context->getEventManager();
+        $this->_orderHelper = $orderHelper;
 
         $this->api->initSdk();
     }
 
     /**
-     * @param $quoteId
+     * @param $order
      * @param $action
      *
      * @return $this|mixed
@@ -57,7 +64,7 @@ class Deco
      * @throws \Exception
      * @throws \Riskified\OrderWebhook\Exception\CurlException
      */
-    public function post($quoteId, $action)
+    public function post($order, $action)
     {
         if (!$this->apiConfig->isEnabled()) {
             return $this;
@@ -69,24 +76,26 @@ class Deco
 
         $transport = $this->getTransport();
 
-        if (!$quoteId) {
+        if (!$order) {
             throw new \Exception("Order doesn't not exists");
         }
 
+        $this->_orderHelper->setOrder($order);
+
         $eventData = array(
-            'quote_id' => $quoteId,
+            'order' => $order,
             'action' => $action
         );
 
         try {
             switch ($action) {
                 case self::ACTION_ELIGIBLE:
-                    $orderForTransport = $this->load($quoteId);
+                    $orderForTransport = $this->load($order);
                     $response = $transport->isEligible($orderForTransport);
                     break;
 
                 case self::ACTION_OPT_IN:
-                    $orderForTransport = $this->load($quoteId);
+                    $orderForTransport = $this->load($order);
                     $response = $transport->optIn($orderForTransport);
                     break;
             }
@@ -107,13 +116,13 @@ class Deco
     }
 
     /**
-     * @param $quoteId
+     * @param $order
      * @return Model\Order
      */
-    private function load($quoteId)
+    private function load($order)
     {
         $order_array = array(
-            'id' => $quoteId,
+            'id' => $this->_orderHelper->getOrderOrigId(),
         );
 
         $order = new Model\Checkout(array_filter($order_array, 'strlen'));

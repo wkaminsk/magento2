@@ -29,6 +29,15 @@ define([
     return {
         paymentFail: function(buttonColor, buttonTextColor, logoUrl) {
             fullScreenLoader.startLoader();
+
+            storage.post(
+                'decider/deco/checkoutDenied',
+                JSON.stringify({
+                    quote_id: quote.getQuoteId()
+                }),
+                true
+            );
+
             storage.post(
                 'decider/deco/isEligible',
                 JSON.stringify({
