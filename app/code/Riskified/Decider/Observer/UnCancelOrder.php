@@ -52,7 +52,8 @@ class UnCancelOrder implements ObserverInterface
         $comment = $observer->getComment();
 
         if ($order->isCanceled()) {
-            $state = Order::STATE_PROCESSING;
+            $state = Order::STATE_NEW;
+            $status = $order->getConfig()->getStateDefaultStatus($state);
             $productStockQty = [];
             foreach ($order->getAllVisibleItems() as $item) {
                 $productStockQty[$item->getProductId()] = $item->getQtyCanceled();
@@ -81,7 +82,7 @@ class UnCancelOrder implements ObserverInterface
             $order->setTotalCanceled(0);
             $order->setBaseTotalCanceled(0);
             $order->setState($state)
-                ->setStatus($order->getConfig()->getStateDefaultStatus($state));
+                ->setStatus($status);
             if (!empty($comment)) {
                 $order->addStatusHistoryComment($comment, false);
             }

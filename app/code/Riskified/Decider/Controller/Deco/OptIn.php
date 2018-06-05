@@ -5,6 +5,7 @@ namespace Riskified\Decider\Controller\Deco;
 use Magento\Framework\App\Action\Action;
 use Riskified\Decider\Api\Deco;
 use Riskified\Decider\Api\Api;
+use \Magento\Sales\Model\Order;
 
 class OptIn extends Action
 {
@@ -38,7 +39,20 @@ class OptIn extends Action
      */
     private $checkoutSession;
 
+    /**
+     * @var \Riskified\Decider\Api\Order
+     */
     private $orderApi;
+
+    /**
+     * @var \Riskified\Decider\Api\Config
+     */
+    private $apiConfig;
+
+    /**
+     * @var \Riskified\Decider\Api\Order\Config
+     */
+    private $apiOrderConfig;
 
     /**
      * IsEligible constructor.
@@ -57,7 +71,9 @@ class OptIn extends Action
         \Magento\Framework\Session\SessionManager $sessionManager,
         \Riskified\Decider\Api\Order $api,
         \Magento\Checkout\Model\Session $checkoutSession,
-        \Riskified\Decider\Api\Order $orderApi
+        \Riskified\Decider\Api\Order $orderApi,
+        \Riskified\Decider\Api\Config $apiConfig,
+        \Riskified\Decider\Api\Order\Config $apiOrderConfig
     ) {
         parent::__construct($context);
 
@@ -68,6 +84,8 @@ class OptIn extends Action
         $this->api = $api;
         $this->checkoutSession = $checkoutSession;
         $this->orderApi = $orderApi;
+        $this->apiConfig = $apiConfig;
+        $this->apiOrderConfig = $apiOrderConfig;
     }
 
     /**
@@ -135,9 +153,20 @@ class OptIn extends Action
                             $quote = $quoteRepository->get($order->getQuoteId());
                             $quote->setIsActive(0);
                             $quoteRepository->save($quote);
-                            $this->api->unCancelOrder($order, __('Order processed by Deco Payments'));
+                            $this->api->unCancelOrder(
+                                $order,
+                                __('Payment by %1 has been declined. Order processed by Deco Payments', $order->getPayment()->getMethod())
+                            );
                             $order->getPayment()->setMethod('deco')->save();
                             $order->save();
+
+                            if ($this->apiConfig->getConfigStatusControlActive()) {
+                                $state = Order::STATE_PROCESSING;
+                                $status = $this->apiOrderConfig->getOnHoldStatusCode();
+                                $order->setState($state)->setStatus($status);
+                                $order->addStatusHistoryComment('Order submitted to Riskified', false);
+                                $order->save();
+                            }
                         } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
                             $this->logger->logException($e);
                         }
