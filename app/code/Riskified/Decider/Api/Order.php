@@ -20,6 +20,11 @@ class Order
     private $date;
     private $queueFactory;
 
+    /**
+     * @var \Riskified\Decider\Model\HistoryFactory
+     */
+    private $historyFactory;
+
     public function __construct(
         Api $api,
         Order\Helper $orderHelper,
@@ -31,7 +36,8 @@ class Order
         \Magento\Sales\Model\Order $orderFactory,
         \Magento\Framework\Stdlib\DateTime\DateTime $date,
         \Riskified\Decider\Model\QueueFactory $queueFactory,
-        \Magento\Framework\Session\SessionManagerInterface $session
+        \Magento\Framework\Session\SessionManagerInterface $session,
+        \Riskified\Decider\Model\HistoryFactory $historyFactory
     ) {
         $this->_api = $api;
         $this->_orderHelper = $orderHelper;
@@ -45,6 +51,7 @@ class Order
         $this->session = $session;
         $this->date = $date;
         $this->queueFactory = $queueFactory;
+        $this->historyFactory = $historyFactory;
 
         $this->_api->initSdk();
     }
@@ -60,6 +67,11 @@ class Order
         if (!$order) {
             throw new \Exception("Order doesn't not exists");
         }
+
+        if ($action === Api::ACTION_UPDATE && !$this->validateHistoryAction($order, Api::ACTION_CHECKOUT_CREATE)) {
+            return;
+        }
+
         $this->_orderHelper->setOrder($order);
         $eventData = array(
             'order' => $order,
@@ -93,6 +105,7 @@ class Order
                     break;
             }
 
+            $this->updateHistory($order, $action);
             $eventData['response'] = $response;
 
             $this->_eventManager->dispatch(
@@ -388,5 +401,58 @@ class Order
             'riskified_decider_order_uncancel',
             $eventData
         );
+    }
+
+    /**
+     * Store api call history.
+     *
+     * @param \Magento\Sales\Model\Order $order
+     * @param string $action
+     *
+     * @return $this
+     */
+    public function updateHistory(\Magento\Sales\Model\Order $order, $action)
+    {
+        $this->logger->log("Saving history for order " . $order->getId());
+
+        try {
+            $history = $this->historyFactory->create();
+            $history->addData([
+                'order_id' => $order->getId(),
+                'action' => $action,
+                'created_at' => $this->date->gmtDate(),
+            ])->save();
+            $this->logger->log("New history stored successfully");
+        } catch (\Exception $e) {
+            $this->logger->logException($e);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Check if action was already called for specific order.
+     *
+     * @param \Magento\Sales\Model\Order $order
+     * @param $action
+     *
+     * @return bool
+     */
+    public function validateHistoryAction(\Magento\Sales\Model\Order $order, $action)
+    {
+        try {
+            $existingHistories = $this->historyFactory->create()->getCollection()
+                ->addFieldToFilter('order_id', $order->getId())
+                ->addFieldToFilter('action', $action);
+
+            if ($existingHistories->getSize() > 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (\Exception $e) {
+            $this->logger->logException($e);
+            return false;
+        }
     }
 }
