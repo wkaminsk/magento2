@@ -6,6 +6,7 @@
     </head>
     <body>
         <referenceContainer name="before.body.end">
+            <block class="Riskified\Decider\Block\Js" name="riskified" template="Riskified_Decider::checkout.phtml"/>
             <block class="Riskified\Decider\Block\Js" name="deco" template="deco.phtml"/>
         </referenceContainer>
         <referenceBlock name="checkout.root">
