@@ -35,28 +35,36 @@ class Deco
     private $_orderHelper;
 
     /**
+     * @var \Riskified\Decider\Model\Resource\Checkout
+     */
+    private $checkoutResource;
+
+    /**
      * Deco constructor.
      *
      * @param Config $apiConfig
      * @param Api $api
      * @param Context $context
+     * @param \Riskified\Decider\Model\Resource\Checkout $checkoutResource
      */
     public function __construct(
         Config $apiConfig,
         Api $api,
         Context $context,
-        \Riskified\Decider\Api\Order\Helper $orderHelper
+        \Riskified\Decider\Api\Order\Helper $orderHelper,
+        \Riskified\Decider\Model\Resource\Checkout $checkoutResource
     ) {
         $this->apiConfig = $apiConfig;
         $this->api = $api;
         $this->_eventManager = $context->getEventManager();
         $this->_orderHelper = $orderHelper;
+        $this->checkoutResource = $checkoutResource;
 
         $this->api->initSdk();
     }
 
     /**
-     * @param $order
+     * @param $quote
      * @param $action
      *
      * @return $this|mixed
@@ -64,7 +72,7 @@ class Deco
      * @throws \Exception
      * @throws \Riskified\OrderWebhook\Exception\CurlException
      */
-    public function post($order, $action)
+    public function post($quote, $action)
     {
         if (!$this->apiConfig->isEnabled()) {
             return $this;
@@ -76,26 +84,26 @@ class Deco
 
         $transport = $this->getTransport();
 
-        if (!$order) {
+        if (!$quote) {
             throw new \Exception("Order doesn't not exists");
         }
 
-        $this->_orderHelper->setOrder($order);
+        $this->_orderHelper->setOrder($quote);
 
         $eventData = array(
-            'order' => $order,
+            'order' => $quote,
             'action' => $action
         );
 
         try {
             switch ($action) {
                 case self::ACTION_ELIGIBLE:
-                    $orderForTransport = $this->load($order);
+                    $orderForTransport = $this->load($quote);
                     $response = $transport->isEligible($orderForTransport);
                     break;
 
                 case self::ACTION_OPT_IN:
-                    $orderForTransport = $this->load($order);
+                    $orderForTransport = $this->load($quote);
                     $response = $transport->optIn($orderForTransport);
                     break;
             }
@@ -116,13 +124,13 @@ class Deco
     }
 
     /**
-     * @param $order
+     * @param $quote
      * @return Model\Order
      */
-    private function load($order)
+    private function load($quote)
     {
         $order_array = array(
-            'id' => $this->_orderHelper->getOrderOrigId(),
+            'id' => $this->checkoutResource->getCheckoutId($quote->getId()),
         );
 
         $order = new Model\Checkout(array_filter($order_array, 'strlen'));

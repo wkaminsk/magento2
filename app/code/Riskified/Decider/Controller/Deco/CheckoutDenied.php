@@ -57,14 +57,22 @@ class CheckoutDenied extends Action
         $resultJson = $this->resultJsonFactory->create();
         try {
             $this->logger->log('Checkout Denied request, quote_id: ' . $this->checkoutSession->getQuoteId());
+            $this->checkoutSession->getQuote()->setQuoteId($this->checkoutSession->getQuote()->getId());
             $this->orderApi->post(
-                $this->checkoutSession->getLastRealOrder(),
+                $this->checkoutSession->getQuote(),
                 Api::ACTION_CHECKOUT_DENIED
             );
+            return $resultJson->setData([
+                'success' => true
+            ]);
         } catch (\Exception $e) {
             $this->logger->logException($e);
+            return $resultJson->setData(
+                [
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ]
+            );
         }
-
-        return $resultJson;
     }
 }

@@ -62,7 +62,7 @@ class IsEligible extends Action
         try {
             $this->logger->log('Deco isEligible request, quote_id: ' . $this->checkoutSession->getQuoteId());
             $response = $this->deco->post(
-                $this->checkoutSession->getLastRealOrder(),
+                $this->checkoutSession->getQuote(),
                 Deco::ACTION_ELIGIBLE
             );
 

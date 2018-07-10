@@ -25,6 +25,11 @@ class Order
      */
     private $historyFactory;
 
+    /**
+     * @var \Riskified\Decider\Model\Resource\Checkout
+     */
+    private $checkoutResource;
+
     public function __construct(
         Api $api,
         Order\Helper $orderHelper,
@@ -37,7 +42,8 @@ class Order
         \Magento\Framework\Stdlib\DateTime\DateTime $date,
         \Riskified\Decider\Model\QueueFactory $queueFactory,
         \Magento\Framework\Session\SessionManagerInterface $session,
-        \Riskified\Decider\Model\HistoryFactory $historyFactory
+        \Riskified\Decider\Model\HistoryFactory $historyFactory,
+        \Riskified\Decider\Model\Resource\Checkout $checkoutResource
     ) {
         $this->_api = $api;
         $this->_orderHelper = $orderHelper;
@@ -52,6 +58,7 @@ class Order
         $this->date = $date;
         $this->queueFactory = $queueFactory;
         $this->historyFactory = $historyFactory;
+        $this->checkoutResource = $checkoutResource;
 
         $this->_api->initSdk();
     }
@@ -105,7 +112,9 @@ class Order
                     break;
             }
 
-            $this->updateHistory($order, $action);
+            if ($order instanceof \Magento\Sales\Model\Order) {
+                $this->updateHistory($order, $action);
+            }
             $eventData['response'] = $response;
 
             $this->_eventManager->dispatch(
@@ -170,7 +179,7 @@ class Order
             $gateway = $model->getPayment()->getMethod();
         }
         $order_array = [
-            'id' => $this->_orderHelper->getOrderOrigId(),
+            'id' => $this->checkoutResource->getCheckoutId($model->getQuoteId()),
             'name' => $model->getIncrementId(),
             'email' => $model->getCustomerEmail(),
             'created_at' => $this->_orderHelper->formatDateAsIso8601($model->getCreatedAt()),
@@ -186,7 +195,7 @@ class Order
             'taxes_included' => true,
             'total_tax' => $model->getBaseTaxAmount(),
             'total_weight' => $model->getWeight(),
-            'cancelled_at' => $this->_orderHelper->formatDateAsIso8601($this->_orderHelper->getCancelledAt()),
+//            'cancelled_at' => $this->_orderHelper->formatDateAsIso8601($this->_orderHelper->getCancelledAt()),
             'financial_status' => $model->getState(),
             'fulfillment_status' => $model->getStatus(),
             'vendor_id' => $model->getStoreId(),
@@ -223,6 +232,7 @@ class Order
         }
         $order_array = array(
             'id' => $this->_orderHelper->getOrderOrigId(),
+            'checkout_id' => $this->checkoutResource->getCheckoutId($model->getQuoteId()),
             'name' => $model->getIncrementId(),
             'email' => $model->getCustomerEmail(),
             'created_at' => $this->_orderHelper->formatDateAsIso8601($model->getCreatedAt()),

@@ -6,6 +6,8 @@ use Magento\Framework\App\Action\Action;
 use Riskified\Decider\Api\Deco;
 use Riskified\Decider\Api\Api;
 use \Magento\Sales\Model\Order;
+use Magento\Quote\Api\CartManagementInterface;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 
 class OptIn extends Action
 {
@@ -55,6 +57,16 @@ class OptIn extends Action
     private $apiOrderConfig;
 
     /**
+     * @var CartManagementInterface
+     */
+    private $quoteManagement;
+
+    /**
+     * @var EventManager
+     */
+    private $eventManager;
+
+    /**
      * IsEligible constructor.
      *
      * @param \Magento\Framework\App\Action\Context $context
@@ -62,6 +74,8 @@ class OptIn extends Action
      * @param Deco $deco
      * @param \Riskified\Decider\Api\Log $logger
      * @param \Magento\Checkout\Model\Session $checkoutSession
+     * @param CartManagementInterface $quoteManagement
+     * @param EventManager $eventManager
      */
     public function __construct(
         \Magento\Framework\App\Action\Context $context,
@@ -73,7 +87,9 @@ class OptIn extends Action
         \Magento\Checkout\Model\Session $checkoutSession,
         \Riskified\Decider\Api\Order $orderApi,
         \Riskified\Decider\Api\Config $apiConfig,
-        \Riskified\Decider\Api\Order\Config $apiOrderConfig
+        \Riskified\Decider\Api\Order\Config $apiOrderConfig,
+        CartManagementInterface $quoteManagement,
+        EventManager $eventManager
     ) {
         parent::__construct($context);
 
@@ -86,6 +102,8 @@ class OptIn extends Action
         $this->orderApi = $orderApi;
         $this->apiConfig = $apiConfig;
         $this->apiOrderConfig = $apiOrderConfig;
+        $this->quoteManagement = $quoteManagement;
+        $this->eventManager = $eventManager;
     }
 
     /**
@@ -97,12 +115,16 @@ class OptIn extends Action
 
         try {
             $this->logger->log('Deco OptIn request, quote_id: ' . $this->checkoutSession->getQuoteId());
+
             $response = $this->deco->post(
-                $this->checkoutSession->getLastRealOrder(),
+                $this->checkoutSession->getQuote(),
                 Deco::ACTION_OPT_IN
             );
 
             if ($response->order->status == 'opt_in') {
+                if (!$this->checkoutSession->getLastRealOrder() || !$this->checkoutSession->getLastRealOrderId()) {
+                    $this->prepareOrder();
+                }
                 $this->processOrder($this->checkoutSession->getQuote()->getPayment()->getMethod());
 
                 $this->orderApi->post(
@@ -173,5 +195,26 @@ class OptIn extends Action
                     }
                 }
         }
+    }
+
+    public function prepareOrder()
+    {
+        $this->checkoutSession->getQuote()->getPayment()->setMethod('deco');
+        $order = $this->quoteManagement->submit($this->checkoutSession->getQuote());
+        if (null == $order) {
+            throw new LocalizedException(
+                __('An error occurred on the server. Please try to place the order again.')
+            );
+        }
+
+        $this->checkoutSession->setLastQuoteId($this->checkoutSession->getQuote()->getId());
+        $this->checkoutSession->setLastSuccessQuoteId($this->checkoutSession->getQuote()->getId());
+        $this->checkoutSession->setLastOrderId($order->getId());
+        $this->checkoutSession->setLastRealOrderId($order->getIncrementId());
+        $this->checkoutSession->setLastOrderStatus($order->getStatus());
+
+        $this->eventManager->dispatch('checkout_submit_all_after', ['order' => $order, 'quote' => $this->checkoutSession->getQuote()]);
+
+        return $this;
     }
 }

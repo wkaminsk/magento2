@@ -30,13 +30,15 @@ define([
         paymentFail: function(buttonColor, buttonTextColor, logoUrl) {
             fullScreenLoader.startLoader();
 
-            storage.post(
-                'decider/deco/checkoutDenied',
-                JSON.stringify({
-                    quote_id: quote.getQuoteId()
-                }),
-                true
-            );
+            if ($('.payment-methods input[type="radio"]:checked').val() === 'authorizenet_directpost') {
+                storage.post(
+                    'decider/deco/checkoutDenied',
+                    JSON.stringify({
+                        quote_id: quote.getQuoteId()
+                    }),
+                    true
+                );
+            }
 
             storage.post(
                 'decider/deco/isEligible',

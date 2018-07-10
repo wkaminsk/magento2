@@ -3,9 +3,10 @@
 <script>
     require([
         'jquery',
+        'Riskified_Decider/js/eligible',
         "jquery/ui",
         'domReady!'
-    ], function($){
+    ], function($, eligible){
         $(document).on('mousedown', '.payment-method-content .checkout', function (e) {
             var value = jQuery('.payment-methods input[type="radio"]:checked').parent().next().find("input[name='payment[cc_number]']").val();
             if (value.length > 0) {
@@ -14,6 +15,19 @@
             e.preventDefault();
         });
 
+        $(document).on('paymentFail', function (e) {
+            eligible.paymentFail(
+                "<?php echo \Magento\Framework\App\ObjectManager::getInstance()
+                    ->get('Magento\Framework\App\Config\ScopeConfigInterface')
+                    ->getValue('riskified/deco_configuration/button_color')?>",
+                "<?php echo \Magento\Framework\App\ObjectManager::getInstance()
+                    ->get('Magento\Framework\App\Config\ScopeConfigInterface')
+                    ->getValue('riskified/deco_configuration/button_text_color')?>",
+                "<?php echo \Magento\Framework\App\ObjectManager::getInstance()
+                    ->get('Magento\Framework\App\Config\ScopeConfigInterface')
+                    ->getValue('riskified/deco_configuration/logo_url')?>"
+            );
+        });
     });
 </script>
 <?php endif ?>
