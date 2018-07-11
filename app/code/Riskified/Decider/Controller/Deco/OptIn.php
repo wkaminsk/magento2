@@ -122,7 +122,7 @@ class OptIn extends Action
             );
 
             if ($response->order->status == 'opt_in') {
-                if (!$this->checkoutSession->getLastRealOrder() || !$this->checkoutSession->getLastRealOrderId()) {
+                if (!$this->checkoutSession->getLastRealOrder()->getQuoteId() !== $this->checkoutSession->getQuote()->getId()) {
                     $this->prepareOrder();
                 }
                 $this->processOrder($this->checkoutSession->getQuote()->getPayment()->getMethod());
@@ -199,6 +199,7 @@ class OptIn extends Action
 
     public function prepareOrder()
     {
+        $previousMethod = $this->checkoutSession->getQuote()->getPayment()->getMethod();
         $this->checkoutSession->getQuote()->getPayment()->setMethod('deco');
         $order = $this->quoteManagement->submit($this->checkoutSession->getQuote());
         if (null == $order) {
@@ -206,6 +207,15 @@ class OptIn extends Action
                 __('An error occurred on the server. Please try to place the order again.')
             );
         }
+
+        $order->addStatusHistoryComment(__('Payment by %1 has been declined. Order processed by Deco Payments', $previousMethod), false);
+        if ($this->apiConfig->getConfigStatusControlActive()) {
+            $state = Order::STATE_PROCESSING;
+            $status = $this->apiOrderConfig->getOnHoldStatusCode();
+            $order->setState($state)->setStatus($status);
+            $order->addStatusHistoryComment('Order submitted to Riskified', false);
+        }
+        $order->save();
 
         $this->checkoutSession->setLastQuoteId($this->checkoutSession->getQuote()->getId());
         $this->checkoutSession->setLastSuccessQuoteId($this->checkoutSession->getQuote()->getId());

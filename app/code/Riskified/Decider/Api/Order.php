@@ -75,7 +75,9 @@ class Order
             throw new \Exception("Order doesn't not exists");
         }
 
-        if ($action === Api::ACTION_UPDATE && !$this->validateHistoryAction($order, Api::ACTION_CHECKOUT_CREATE)) {
+        if ($action === Api::ACTION_UPDATE
+            && (!$this->validateHistoryAction($order, Api::ACTION_CHECKOUT_CREATE) || !$this->validateHistoryAction($order, Api::ACTION_CREATE))
+        ) {
             return;
         }
 
@@ -421,16 +423,16 @@ class Order
      *
      * @return $this
      */
-    public function updateHistory(\Magento\Sales\Model\Order $order, $action)
+    public function updateHistory($order, $action)
     {
         $this->logger->log("Saving history for order " . $order->getId());
 
         try {
             $history = $this->historyFactory->create();
             $history->addData([
-                'order_id' => $order->getId(),
                 'action' => $action,
                 'created_at' => $this->date->gmtDate(),
+                'checkout_id' => $this->checkoutResource->getCheckoutId($order->getQuoteId())
             ])->save();
             $this->logger->log("New history stored successfully");
         } catch (\Exception $e) {
@@ -448,11 +450,11 @@ class Order
      *
      * @return bool
      */
-    public function validateHistoryAction(\Magento\Sales\Model\Order $order, $action)
+    public function validateHistoryAction($order, $action)
     {
         try {
             $existingHistories = $this->historyFactory->create()->getCollection()
-                ->addFieldToFilter('order_id', $order->getId())
+                ->addFieldToFilter('checkout_id', $this->checkoutResource->getCheckoutId($order->getQuoteId()))
                 ->addFieldToFilter('action', $action);
 
             if ($existingHistories->getSize() > 0) {
