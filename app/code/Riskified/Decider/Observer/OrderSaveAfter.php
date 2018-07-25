@@ -17,6 +17,11 @@ class OrderSaveAfter implements ObserverInterface
         $this->_orderApi = $orderApi;
     }
 
+    /**
+     * Execute event.
+     *
+     * @param \Magento\Framework\Event\Observer $observer
+     */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         $order = $observer->getOrder();
@@ -26,15 +31,34 @@ class OrderSaveAfter implements ObserverInterface
         }
 
         if ($order->dataHasChangedFor('state')) {
-            if ($order->getPayment()->getMethod() == 'authorizenet_directpost') {
-                try {
-                    $this->_orderApi->post($order, Api::ACTION_UPDATE);
-                } catch (\Exception $e) {
-                    $this->_logger->critical($e);
+            $payment = $order->getPayment();
+            $paymentMethodCode = $payment->getMethod();
+            if ($paymentMethodCode == 'authorizenet_directpost') {
+                $this->triggerSave($order);
+            }
+            if ($paymentMethodCode == 'adyen_oneclick' || $paymentMethodCode == 'adyen_cc') {
+                if ($order->getState() == \Magento\Sales\Model\Order::STATE_PROCESSING) {
+                    $this->triggerSave($order);
                 }
             }
         } else {
-            $this->_logger->debug(__("No data found"));
+            $this->_logger->debug(
+                __("The state was not changed for this order. Aborting.")
+            );
+        }
+    }
+
+    /**
+     * Trigger post method for allowed order.
+     *
+     * @param \Magento\Sales\Model\Order $order
+     */
+    private function triggerSave($order)
+    {
+        try {
+            $this->_orderApi->post($order, Api::ACTION_UPDATE);
+        } catch (\Exception $e) {
+            $this->_logger->critical($e);
         }
     }
 }
