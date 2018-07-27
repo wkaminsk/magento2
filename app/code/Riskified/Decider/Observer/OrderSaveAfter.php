@@ -43,7 +43,7 @@ class OrderSaveAfter implements ObserverInterface
             }
         } else {
             $this->_logger->debug(
-                __("The state was not changed for this order. Aborting.")
+                __("Order save event observer: The state was not changed for this order. Aborting.")
             );
         }
     }
