@@ -364,6 +364,19 @@ class Helper
                     $credit_card_company = $payment->getCcType();
                     $avs_result_code = $payment->getAdditionalInformation('address_line1_check') . ',' . $payment->getAdditionalInformation('address_zip_check');
                     break;
+                case 'chcybersource':
+                    $avs_result_code = $payment->getAdditionalInformation('auth_avs_code');
+                    $transactionId = $payment->getAdditionalInformation('transaction_id');
+                    $credit_card_number =  $payment->getCcLast4();
+                    $credit_card_company = $payment->getAdditionalInformation('cardType');
+                    if (is_string($payment->getAdditionalInformation('cardNumber'))) {
+                        $bin = substr($payment->getAdditionalInformation('cardNumber'), 0, 6);
+                        if (is_numeric($bin)) {
+                            $credit_card_bin = $bin;
+                        }
+                    }
+
+                    break;
                 default:
                     break;
             }
