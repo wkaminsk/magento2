@@ -238,4 +238,15 @@ class Config
             ScopeInterface::SCOPE_STORES
         );
     }
+
+    /**
+     * @return string
+     */
+    public function getTrustedEmails()
+    {
+        return $this->_scopeConfig->getValue(
+            'riskified/trusted_emails_configuration/emails',
+            ScopeInterface::SCOPE_STORES
+        );
+    }
 }
