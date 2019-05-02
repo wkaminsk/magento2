@@ -39,6 +39,14 @@ class Notification {
      * @var string Description of Decision
      */
     public $description;
+    /**
+     * @var string Category of Decision
+     */
+    public $category;
+    /**
+     * @var string Decision Code of Decision
+     */
+    public $decisionCode;
 
     protected $signature;
     protected $headers;
@@ -91,5 +99,13 @@ class Notification {
         $this->status = $order->{'status'};
         $this->oldStatus = $order->{'old_status'};
         $this->description = $order->{'description'};
+
+        if (array_key_exists('category', $order)) {
+            $this->category = $order->{'category'};
+        }
+
+        if (array_key_exists('decision_code', $order)) {
+            $this->decisionCode = $order->{'decision_code'};
+        }
     }
 }

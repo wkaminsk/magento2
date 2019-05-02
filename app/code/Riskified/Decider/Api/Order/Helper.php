@@ -136,38 +136,56 @@ class Helper
         $line_items = array();
 
         foreach ($this->getOrder()->getAllVisibleItems() as $key => $item) {
-            $prod_type = null;
+            $line_items[] = $this->getPreparedLineItem($item);
 
-            $prod_type = null;
-            $category = null;
-            $sub_categories = null;
-            $brand = null;
-            $product = $item->getProduct();
+        }
+        return $line_items;
+    }
 
-            if ($product) {
-                $categories = [];
-                $sub_categories = [];
-                $category_ids = $product->getCategoryIds();
+    public function getAllLineItems()
+    {
+        $line_items = array();
 
-                foreach ($category_ids as $categoryId) {
-                    $cat = $this->_categoryFactory->load($categoryId);
-                    if ($cat->getLevel() == 2) {
-                        $categories[] = $cat->getName();
-                    } elseif ($cat->getLevel() >= 3) {
-                        $sub_categories[] = $cat->getName();
-                    }
-                }
+        foreach ($this->getOrder()->getAllItems() as $key => $item) {
+            $line_items[] = $this->getPreparedLineItem($item);
+        }
 
-                if (count($category_ids) == 0) {
-                    $store_root_category_id = $this->_storeManager->getStore()->getRootCategoryId();
-                    $root_category = $this->_categoryFactory->load($store_root_category_id);
-                    $categories[] = $root_category->getName();
-                }
+        return $line_items;
+    }
 
-                if($product->getManufacturer()) {
-                    $brand = $product->getResource()->getAttribute('manufacturer')->getFrontend()->getValue($product);
+    protected function getPreparedLineItem($item) {
+        $prod_type = null;
+
+        $prod_type = null;
+        $category = null;
+        $sub_categories = null;
+        $brand = null;
+        $product = $item->getProduct();
+
+        if ($product) {
+            $categories = [];
+            $sub_categories = [];
+            $category_ids = $product->getCategoryIds();
+
+            foreach ($category_ids as $categoryId) {
+                $cat = $this->_categoryFactory->load($categoryId);
+                if ($cat->getLevel() == 2) {
+                    $categories[] = $cat->getName();
+                } elseif ($cat->getLevel() >= 3) {
+                    $sub_categories[] = $cat->getName();
                 }
             }
+
+            if (count($category_ids) == 0) {
+                $store_root_category_id = $this->_storeManager->getStore()->getRootCategoryId();
+                $root_category = $this->_categoryFactory->load($store_root_category_id);
+                $categories[] = $root_category->getName();
+            }
+
+            if($product->getManufacturer()) {
+                $brand = $product->getResource()->getAttribute('manufacturer')->getFrontend()->getValue($product);
+            }
+
             $lineItemsDataArray = array_filter(array(
                 'price' => $item->getPrice(),
                 'quantity' => intval($item->getQtyOrdered()),
@@ -183,7 +201,7 @@ class Helper
 
             $lineItemsDataArray['requires_shipping'] = (bool)!$item->getIsVirtual();
 
-            $line_items[] = new Model\LineItem($lineItemsDataArray);
+            $line_items = new Model\LineItem($lineItemsDataArray);
         }
         return $line_items;
     }
@@ -279,6 +297,7 @@ class Helper
                 case 'paypal_express':
                 case 'paypaluk_express':
                 case 'paypal_standard':
+                case 'payflow_express':
                     $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
                     $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
                     $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
@@ -332,6 +351,36 @@ class Helper
                     $houseVerification = $payment->getAdditionalInformation('avsaddr');
                     $zipVerification = $payment->getAdditionalInformation('avszip');
                     $avs_result_code = $houseVerification . ',' . $zipVerification;
+                break;
+                case 'adyen_oneclick':
+                    $avs_result_code = $payment->getAdditionalInformation('adyen_avs_result');
+                    $cvv_result_code = $payment->getAdditionalInformation('adyen_cvc_result');
+                    $transactionId = $payment->getAdditionalInformation('pspReference');
+                    $credit_card_bin = $payment->getAdyenCardBin();
+                break;
+                case 'adyen_cc':
+                    $avs_result_code = $payment->getAdditionalInformation('adyen_avs_result');
+                    $cvv_result_code = $payment->getAdditionalInformation('adyen_cvc_result');
+                    $transactionId = $payment->getAdditionalInformation('pspReference');
+                    $credit_card_bin = $payment->getAdyenCardBin();
+                    break;
+                case 'cryozonic_stripe':
+                    $credit_card_number = $payment->getCcLast4();
+                    $credit_card_company = $payment->getCcType();
+                    $avs_result_code = $payment->getAdditionalInformation('address_line1_check') . ',' . $payment->getAdditionalInformation('address_zip_check');
+                    break;
+                case 'chcybersource':
+                    $avs_result_code = $payment->getAdditionalInformation('auth_avs_code');
+                    $transactionId = $payment->getAdditionalInformation('transaction_id');
+                    $credit_card_number =  $payment->getCcLast4();
+                    $credit_card_company = $payment->getAdditionalInformation('cardType');
+                    if (is_string($payment->getAdditionalInformation('cardNumber'))) {
+                        $bin = substr($payment->getAdditionalInformation('cardNumber'), 0, 6);
+                        if (is_numeric($bin)) {
+                            $credit_card_bin = $bin;
+                        }
+                    }
+
                     break;
                 default:
                     break;
@@ -403,6 +452,35 @@ class Helper
             'cancel_reason' => 'Cancelled by merchant'
         )));
         return $orderCancellation;
+    }
+
+    public function getOrderFulfillments()
+    {
+        $fulfillments = array();
+
+        foreach ($this->getOrder()->getShipmentsCollection() as $shipment) {
+            $tracking = $shipment->getTracksCollection()->getFirstItem();
+            $comment = $shipment->getCommentsCollection()->getFirstItem();
+            $payload = array(
+                "fulfillment_id" => $shipment->getIncrementId(),
+                "created_at" => $this->formatDateAsIso8601($shipment->getCreatedAt()),
+                "status" => "success",
+                "tracking_company" => $tracking->getTitle(),
+                "tracking_numbers" => $tracking->getTrackNumber(),
+                "message" => $comment->getComment(),
+                "line_items" => $this->getAllLineItems($shipment)
+            );
+
+            $fulfillments[] = new Model\FulfillmentDetails(array_filter($payload));
+        }
+
+
+        $orderFulfillments = new Model\Fulfillment(array_filter(array(
+            'id' => $this->getOrderOrigId(),
+            'fulfillments' => $fulfillments,
+        )));
+
+        return $orderFulfillments;
     }
 
     public function getRemoteIp()

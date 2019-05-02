@@ -1,5 +1,4 @@
 <?php
-
 namespace Riskified\Decider\Observer;
 
 use Magento\Framework\App\ObjectManagerFactory;
@@ -28,57 +27,56 @@ class AutoInvoice implements ObserverInterface
      *
      * @var Order
      */
-    protected $logger;
+    private $logger;
 
     /**
      * Module api class.
      *
      * @var OrderApi
      */
-    protected $apiOrder;
+    private $apiOrder;
 
     /**
      * Api logger.
      *
      * @var Log
      */
-    protected $apiOrderLogger;
+    private $apiOrderLogger;
 
     /**
      * Module config.
      *
      * @var Config
      */
-    protected $apiConfig;
-
+    private $apiConfig;
 
     /**
      * Magento's invoice service.
      *
      * @var InvoiceService
      */
-    protected $invoiceService;
+    private $invoiceService;
 
     /**
      * Context class.
      *
      * @var Context
      */
-    protected $context;
+    private $context;
 
     /**
      * Object Manager class.
      *
      * @var ObjectManagerFactory
      */
-    protected $objectManager;
+    private $objectManager;
 
     /**
      * State class used to emulate admin scope during invoice creation.
      *
      * @var State
      */
-    protected $state;
+    private $state;
 
     /**
      * AutoInvoice constructor.
@@ -106,8 +104,8 @@ class AutoInvoice implements ObserverInterface
         $this->apiConfig = $apiConfig;
         $this->apiOrderLogger = $apiOrderLogger;
         $this->invoiceService = $invoiceService;
-        $this->objectManager = $objectManagerFactory;
-        $this->state = $context->getAppState();
+        $this->objectManager  = $objectManagerFactory;
+        $this->state  = $context->getAppState();
     }
 
     /**
@@ -163,7 +161,7 @@ class AutoInvoice implements ObserverInterface
                     false,
                     false
                 );
-            
+
             $this->state->emulateAreaCode(
                 'adminhtml',
                 [$invoice, 'register']
@@ -190,7 +188,7 @@ class AutoInvoice implements ObserverInterface
      *
      * @return bool
      */
-    protected function canRun()
+    private function canRun()
     {
         if (!$this->apiConfig->isAutoInvoiceEnabled()) {
             return false;
