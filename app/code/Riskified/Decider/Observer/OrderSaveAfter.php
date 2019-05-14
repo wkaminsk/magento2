@@ -41,12 +41,15 @@ class OrderSaveAfter implements ObserverInterface
      */
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
+        /** @var \Magento\Sales\Model\Order $order */
         $order = $observer->getOrder();
         if (!$order) {
             return;
         }
+
+        $newState = $order->getState();
+
         if((int)$order->dataHasChangedFor('state') === 1) {
-            $newState = $order->getState();
             $oldState = $order->getOrigData('state');
 
             if ($oldState == Order::STATE_HOLDED and $newState == Order::STATE_PROCESSING) {
@@ -70,12 +73,18 @@ class OrderSaveAfter implements ObserverInterface
 
                 $this->_registry->unregister("riskified-order");
             } catch (\Exception $e) {
-                // There is no need to do anything here.  The exception has already been handled and a retry scheduled.
-                // We catch this exception   so that the order is still saved in Magento.
+                // There is no need to do anything here. The exception has already been handled and a retry scheduled.
+                // We catch this exception so that the order is still saved in Magento.
             }
 
         } else {
-            $this->_logger->debug(__("Order: '" . $order->getId() . "' state didn't change on save - not posting again: " . $newState));
+            $this->_logger->debug(
+                sprintf(
+                    __("Order: %s state didn't change on save - not posting again: %s"),
+                    $order->getIncrementId(),
+                    $newState
+                )
+            );
         }
     }
 }
