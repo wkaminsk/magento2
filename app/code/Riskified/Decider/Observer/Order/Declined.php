@@ -219,7 +219,7 @@ class Declined implements ObserverInterface {
     }
 
     /**
-     * @param $order
+     * @param \Magento\Sales\Api\Data\OrderInterface $order
      * @return array
      */
     private function getFormattedData($order)
@@ -230,9 +230,37 @@ class Declined implements ObserverInterface {
             $products[] = $item->getName();
         }
 
+        $name = $order->getCustomerName();
+
+        if (!$name) {
+            if ($order->getCustomerFirstname() && $order->getCustomerLastname()) {
+                $name = sprintf("%s %s", $order->getCustomerFirstname(), $order->getCustomerLastname());
+            }
+        }
+
+        if (!$name) {
+            if ($order->getBillingAddress()) {
+                $name = $order->getBillingAddress()->getName();
+
+                if (!$name) {
+                    $name = sprintf(
+                        "%s %s",
+                        $order->getBillingAddress()->getFirstname(),
+                        $order->getBillingAddress()->getLastname()
+                    );
+                }
+            }
+        }
+
+        $firstName = $order->getCustomerFirstname();
+
+        if (!$firstName) {
+            $firstName = $order->getBillingAddress()->getFirstname();
+        }
+
         $data = [
-            $order->getCustomerName(),
-            $order->getCustomerFirstname(),
+            $name,
+            $firstName,
             $order->getIncrementId(),
             $this->storeManager->getStore()->getUrl(
                 "sales/order/view",
