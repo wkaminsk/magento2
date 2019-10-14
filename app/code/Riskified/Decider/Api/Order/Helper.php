@@ -284,6 +284,23 @@ class Helper
                     $avs_result_code = $payment->getAdditionalInformation('avs_result_code');
                     $cvv_result_code = $payment->getAdditionalInformation('card_code_response_code');
                     break;
+                case 'braintree_paypal':
+                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
+                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
+                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
+                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
+                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
+                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
+                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
+                    return new Model\PaymentDetails(array_filter(array(
+                        'authorization_id' => $transactionId,
+                        'payer_email' => $payer_email,
+                        'payer_status' => $payer_status,
+                        'payer_address_status' => $payer_address_status,
+                        'protection_eligibility' => $protection_eligibility,
+                        'payment_status' => $payment_status,
+                        'pending_reason' => $pending_reason
+                    ), 'strlen'));
                 case 'optimal_hosted':
                     try {
                         $optimalTransaction = unserialize($payment->getAdditionalInformation('transaction'));
