@@ -257,6 +257,22 @@ class Helper
                     }
                     break;
                 case 'braintree_paypal':
+                    $cvv_result_code = $payment->getAdditionalInformation('cvvResponseCode');
+                    $credit_card_bin = $payment->getAdditionalInformation('bin');
+                    $houseVerification = $payment->getAdditionalInformation('avsStreetAddressResponseCode');
+                    $zipVerification = $payment->getAdditionalInformation('avsPostalCodeResponseCode');
+                    $avs_result_code = $houseVerification . ',' . $zipVerification;
+                    $payer_email = $payment->getAdditionalInformation('payerEmail');
+                    $transactionId =  $payment->getAdditionalInformation('paymentId');
+                    $payment_status = $payment->getAdditionalInformation('processorResponseText');
+
+                    return new Model\PaymentDetails(array_filter(array(
+                        'authorization_id' => $transactionId,
+                        'payer_email' => $payer_email,
+                        'payer_status' => $cvv_result_code,
+                        'payer_address_status' => $avs_result_code,
+                        'payment_status' => $payment_status,
+                    )));
                 case 'paypal_express':
                 case 'paypaluk_express':
                 case 'paypal_standard':
@@ -314,13 +330,11 @@ class Helper
                     $houseVerification = $payment->getAdditionalInformation('avsaddr');
                     $zipVerification = $payment->getAdditionalInformation('avszip');
                     $avs_result_code = $houseVerification . ',' . $zipVerification;
-                    break;
                 case 'adyen_oneclick':
                     $avs_result_code = $payment->getAdditionalInformation('adyen_avs_result');
                     $cvv_result_code = $payment->getAdditionalInformation('adyen_cvc_result');
                     $transactionId = $payment->getAdditionalInformation('pspReference');
                     $credit_card_bin = $payment->getAdyenCardBin();
-                    break;
                 case 'adyen_cc':
                     $avs_result_code = $payment->getAdditionalInformation('adyen_avs_result');
                     $cvv_result_code = $payment->getAdditionalInformation('adyen_cvc_result');
