@@ -286,7 +286,6 @@ class Helper
                     break;
                 case 'braintree_paypal':
                     $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
-                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
                     $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
                     $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
                     $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
@@ -312,8 +311,53 @@ class Helper
                     }
                     break;
                 case 'paypal_express':
+                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
+                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
+                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
+                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
+                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
+                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
+                    return new Model\PaymentDetails(array_filter(array(
+                        'authorization_id' => $transactionId,
+                        'payer_email' => $payer_email,
+                        'payer_status' => $payer_status,
+                        'payer_address_status' => $payer_address_status,
+                        'protection_eligibility' => $protection_eligibility,
+                        'payment_status' => $payment_status,
+                        'pending_reason' => $pending_reason
+                    ), 'strlen'));
                 case 'paypaluk_express':
+                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
+                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
+                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
+                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
+                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
+                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
+                    return new Model\PaymentDetails(array_filter(array(
+                        'authorization_id' => $transactionId,
+                        'payer_email' => $payer_email,
+                        'payer_status' => $payer_status,
+                        'payer_address_status' => $payer_address_status,
+                        'protection_eligibility' => $protection_eligibility,
+                        'payment_status' => $payment_status,
+                        'pending_reason' => $pending_reason
+                    ), 'strlen'));
                 case 'paypal_standard':
+                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
+                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
+                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
+                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
+                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
+                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
+                    return new Model\PaymentDetails(array_filter(array(
+                        'authorization_id' => $transactionId,
+                        'payer_email' => $payer_email,
+                        'payer_status' => $payer_status,
+                        'payer_address_status' => $payer_address_status,
+                        'protection_eligibility' => $protection_eligibility,
+                        'payment_status' => $payment_status,
+                        'pending_reason' => $pending_reason
+                    ), 'strlen'));
                 case 'payflow_express':
                     $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
                     $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
