@@ -1,9 +1,6 @@
 <?php
-
 namespace Riskified\Decider\Api\Order;
-
 use Riskified\OrderWebhook\Model;
-
 class Helper
 {
     private $_order;
@@ -15,7 +12,6 @@ class Helper
     private $_orderFactory;
     private $_categoryFactory;
     private $_storeManager;
-
     public function __construct(
         \Magento\Framework\Logger\Monolog $logger,
         \Riskified\Decider\Api\Config $apiConfig,
@@ -36,17 +32,14 @@ class Helper
         $this->_categoryFactory = $categoryFactory;
         $this->_storeManager = $storeManager;
     }
-
     public function setOrder($model)
     {
         $this->_order = $model;
     }
-
     public function getOrder()
     {
         return $this->_order;
     }
-
     public function getOrderOrigId()
     {
         if (!$this->getOrder()) {
@@ -54,7 +47,6 @@ class Helper
         }
         return $this->getOrder()->getId() . '_' . $this->getOrder()->getIncrementId();
     }
-
     public function getDiscountCodes()
     {
         $code = $this->getOrder()->getDiscountDescription();
@@ -66,31 +58,26 @@ class Helper
             )));
         return null;
     }
-
     public function getShippingAddress()
     {
         $mageAddr = $this->getOrder()->getShippingAddress();
         return $this->getAddress($mageAddr);
     }
-
     public function getBillingAddress()
     {
         $mageAddr = $this->getOrder()->getBillingAddress();
         return $this->getAddress($mageAddr);
     }
-
     public function getClientDetails()
     {
         $om = \Magento\Framework\App\ObjectManager::getInstance();
         $resolver = $om->get('Magento\Framework\Locale\Resolver');
         $httpHeader = $om->get('Magento\Framework\HTTP\Header');
-
         return new Model\ClientDetails(array_filter(array(
             'accept_language' => $resolver->getLocale(),
             'user_agent' => $httpHeader->getHttpUserAgent()
         ), 'strlen'));
     }
-
     public function getCustomer()
     {
         $customer_id = $this->getOrder()->getCustomerId();
@@ -124,49 +111,38 @@ class Helper
         }
         return new Model\Customer(array_filter($customer_props, 'strlen'));
     }
-
     public function getCustomerSession()
     {
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         return $objectManager->get('Magento\Customer\Model\Session');
     }
-
     public function getLineItems()
     {
         $line_items = array();
-
         foreach ($this->getOrder()->getAllVisibleItems() as $key => $item) {
             $line_items[] = $this->getPreparedLineItem($item);
-
         }
         return $line_items;
     }
-
     public function getAllLineItems()
     {
         $line_items = array();
-
         foreach ($this->getOrder()->getAllItems() as $key => $item) {
             $line_items[] = $this->getPreparedLineItem($item);
         }
-
         return $line_items;
     }
-
     protected function getPreparedLineItem($item) {
         $prod_type = null;
-
         $prod_type = null;
         $category = null;
         $sub_categories = null;
         $brand = null;
         $product = $item->getProduct();
-
         if ($product) {
             $categories = [];
             $sub_categories = [];
             $category_ids = $product->getCategoryIds();
-
             foreach ($category_ids as $categoryId) {
                 $cat = $this->_categoryFactory->load($categoryId);
                 if ($cat->getLevel() == 2) {
@@ -175,17 +151,14 @@ class Helper
                     $sub_categories[] = $cat->getName();
                 }
             }
-
             if (count($category_ids) == 0) {
                 $store_root_category_id = $this->_storeManager->getStore()->getRootCategoryId();
                 $root_category = $this->_categoryFactory->load($store_root_category_id);
                 $categories[] = $root_category->getName();
             }
-
             if($product->getManufacturer()) {
                 $brand = $product->getResource()->getAttribute('manufacturer')->getFrontend()->getValue($product);
             }
-
             $lineItemsDataArray = array_filter(array(
                 'price' => $item->getPrice(),
                 'quantity' => intval($item->getQtyOrdered()),
@@ -198,14 +171,11 @@ class Helper
                 'category' => (isset($categories) && count($categories) > 0) ? implode('|', $categories) : '',
                 'sub_category' => (isset($sub_categories) && count($sub_categories) > 0) ? implode('|', $sub_categories) : ''
             ), 'strlen');
-
             $lineItemsDataArray['requires_shipping'] = (bool)!$item->getIsVirtual();
-
             $line_items = new Model\LineItem($lineItemsDataArray);
         }
         return $line_items;
     }
-
     public function getAddress($address)
     {
         if (!$address) {
@@ -214,13 +184,10 @@ class Helper
         $street = $address->getStreet();
         $address_1 = (!is_null($street) && array_key_exists('0', $street)) ? $street['0'] : null;
         $address_2 = (!is_null($street) && array_key_exists('1', $street)) ? $street['1'] : null;
-
         $firstName = $address->getFirstname();
-
         if (is_object($firstName)) {
             $firstName = $firstName->getText();
         }
-
         $addrArray = array_filter(array(
             'first_name' => $firstName,
             'last_name' => $address->getLastname(),
@@ -234,20 +201,17 @@ class Helper
             'zip' => $address->getPostcode(),
             'phone' => $address->getTelephone(),
         ), 'strlen');
-
         if (!$addrArray) {
             return null;
         }
         return new Model\Address($addrArray);
     }
-
     public function getPaymentDetails()
     {
         $payment = $this->getOrder()->getPayment();
         if (!$payment) {
             return null;
         }
-
         if ($this->_apiConfig->isLoggingEnabled()) {
             $this->_apiLogger->payment($this->getOrder());
         }
@@ -255,7 +219,6 @@ class Helper
         $gateway_name = $payment->getMethod();
         try {
             $credit_card_bin = '';
-
             switch ($gateway_name) {
                 case 'authorizenet_directpost':
                     $authorize_data = $payment->getAdditionalInformation('authorize_cards');
@@ -277,29 +240,12 @@ class Helper
                             }
                         }
                     }
-
                     $credit_card_number = $payment->decrypt($payment->getCcLast4());
                     break;
                 case 'authnetcim':
                     $avs_result_code = $payment->getAdditionalInformation('avs_result_code');
                     $cvv_result_code = $payment->getAdditionalInformation('card_code_response_code');
                     break;
-                case 'braintree_paypal':
-                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
-                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
-                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
-                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
-                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
-                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
-                    return new Model\PaymentDetails(array_filter(array(
-                        'authorization_id' => $transactionId,
-                        'payer_email' => $payer_email,
-                        'payer_status' => $payer_status,
-                        'payer_address_status' => $payer_address_status,
-                        'protection_eligibility' => $protection_eligibility,
-                        'payment_status' => $payment_status,
-                        'pending_reason' => $pending_reason
-                    ), 'strlen'));
                 case 'optimal_hosted':
                     try {
                         $optimalTransaction = unserialize($payment->getAdditionalInformation('transaction'));
@@ -310,54 +256,10 @@ class Helper
                     } catch (\Exception $e) {
                     }
                     break;
+                case 'braintree_paypal':
                 case 'paypal_express':
-                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
-                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
-                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
-                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
-                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
-                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
-                    return new Model\PaymentDetails(array_filter(array(
-                        'authorization_id' => $transactionId,
-                        'payer_email' => $payer_email,
-                        'payer_status' => $payer_status,
-                        'payer_address_status' => $payer_address_status,
-                        'protection_eligibility' => $protection_eligibility,
-                        'payment_status' => $payment_status,
-                        'pending_reason' => $pending_reason
-                    ), 'strlen'));
                 case 'paypaluk_express':
-                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
-                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
-                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
-                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
-                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
-                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
-                    return new Model\PaymentDetails(array_filter(array(
-                        'authorization_id' => $transactionId,
-                        'payer_email' => $payer_email,
-                        'payer_status' => $payer_status,
-                        'payer_address_status' => $payer_address_status,
-                        'protection_eligibility' => $protection_eligibility,
-                        'payment_status' => $payment_status,
-                        'pending_reason' => $pending_reason
-                    ), 'strlen'));
                 case 'paypal_standard':
-                    $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
-                    $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
-                    $payer_address_status = $payment->getAdditionalInformation('paypal_address_status');
-                    $protection_eligibility = $payment->getAdditionalInformation('paypal_protection_eligibility');
-                    $payment_status = $payment->getAdditionalInformation('paypal_payment_status');
-                    $pending_reason = $payment->getAdditionalInformation('paypal_pending_reason');
-                    return new Model\PaymentDetails(array_filter(array(
-                        'authorization_id' => $transactionId,
-                        'payer_email' => $payer_email,
-                        'payer_status' => $payer_status,
-                        'payer_address_status' => $payer_address_status,
-                        'protection_eligibility' => $protection_eligibility,
-                        'payment_status' => $payment_status,
-                        'pending_reason' => $pending_reason
-                    ), 'strlen'));
                 case 'payflow_express':
                     $payer_email = $payment->getAdditionalInformation('paypal_payer_email');
                     $payer_status = $payment->getAdditionalInformation('paypal_payer_status');
@@ -412,13 +314,13 @@ class Helper
                     $houseVerification = $payment->getAdditionalInformation('avsaddr');
                     $zipVerification = $payment->getAdditionalInformation('avszip');
                     $avs_result_code = $houseVerification . ',' . $zipVerification;
-                break;
+                    break;
                 case 'adyen_oneclick':
                     $avs_result_code = $payment->getAdditionalInformation('adyen_avs_result');
                     $cvv_result_code = $payment->getAdditionalInformation('adyen_cvc_result');
                     $transactionId = $payment->getAdditionalInformation('pspReference');
                     $credit_card_bin = $payment->getAdyenCardBin();
-                break;
+                    break;
                 case 'adyen_cc':
                     $avs_result_code = $payment->getAdditionalInformation('adyen_avs_result');
                     $cvv_result_code = $payment->getAdditionalInformation('adyen_cvc_result');
@@ -441,7 +343,6 @@ class Helper
                             $credit_card_bin = $bin;
                         }
                     }
-
                     break;
                 default:
                     break;
@@ -460,7 +361,6 @@ class Helper
         if (!isset($avs_result_code)) {
             $avs_result_code = $payment->getCcAvsStatus();
         }
-
         $om = \Magento\Framework\App\ObjectManager::getInstance();
         if (!isset($credit_card_bin) || !$credit_card_bin) {
             $session = $om->get('Magento\Customer\Model\Session');
@@ -474,7 +374,6 @@ class Helper
         if (isset($credit_card_number)) {
             $credit_card_number = "XXXX-XXXX-XXXX-" . $credit_card_number;
         }
-
         return new Model\PaymentDetails(array_filter(array(
             'authorization_id' => $transactionId,
             'avs_result_code' => $avs_result_code,
@@ -484,7 +383,6 @@ class Helper
             'credit_card_bin' => $credit_card_bin
         ), 'strlen'));
     }
-
     public function getShippingLines()
     {
         return new Model\ShippingLine(array_filter(array(
@@ -493,7 +391,6 @@ class Helper
             'code' => $this->getOrder()->getShippingMethod()
         ), 'strlen'));
     }
-
     public function getCancelledAt()
     {
         $commentCollection = $this->getOrder()->getStatusHistoryCollection();
@@ -504,7 +401,6 @@ class Helper
         }
         return null;
     }
-
     public function getOrderCancellation()
     {
         $orderCancellation = new Model\OrderCancellation(array_filter(array(
@@ -514,11 +410,9 @@ class Helper
         )));
         return $orderCancellation;
     }
-
     public function getOrderFulfillments()
     {
         $fulfillments = array();
-
         foreach ($this->getOrder()->getShipmentsCollection() as $shipment) {
             $tracking = $shipment->getTracksCollection()->getFirstItem();
             $comment = $shipment->getCommentsCollection()->getFirstItem();
@@ -531,24 +425,18 @@ class Helper
                 "message" => $comment->getComment(),
                 "line_items" => $this->getAllLineItems($shipment)
             );
-
             $fulfillments[] = new Model\FulfillmentDetails(array_filter($payload));
         }
-
-
         $orderFulfillments = new Model\Fulfillment(array_filter(array(
             'id' => $this->getOrderOrigId(),
             'fulfillments' => $fulfillments,
         )));
-
         return $orderFulfillments;
     }
-
     public function getRemoteIp()
     {
         $this->_apiLogger->log("remote ip: " . $this->getOrder()->getRemoteIp() .
             ", x-forwarded-ip: " . $this->getOrder()->getXForwardedFor());
-
         $forwardedIp = $this->getOrder()->getXForwardedFor();
         $forwardeds = preg_split("/,/", $forwardedIp, -1, PREG_SPLIT_NO_EMPTY);
         if (!empty($forwardeds)) {
@@ -563,23 +451,19 @@ class Helper
                 foreach ($remotes AS $k => $val) {
                     $remotes[$k] = trim($val);
                 }
-
                 return join(',', $remotes);
             }
         }
         return $remoteIp;
     }
-
     public function formatDateAsIso8601($dateStr)
     {
         return ($dateStr == NULL) ? NULL : date('c', strtotime($dateStr));
     }
-
     public function isAdmin()
     {
         $om = \Magento\Framework\App\ObjectManager::getInstance();
         $state = $om->get('Magento\Framework\App\State');
-
         return $state->getAreaCode() === 'adminhtml';
     }
 }
