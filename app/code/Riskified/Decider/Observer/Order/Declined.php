@@ -136,7 +136,7 @@ class Declined implements ObserverInterface {
         $order = $observer->getOrder();
         $storeId = $order->getStoreId();
 
-        if (!$this->apiConfig->isDeclineNotificationEnabled()) {
+        if (!$this->apiConfig->isDeclineNotificationEnabled($storeId)) {
             return $this;
         }
 
