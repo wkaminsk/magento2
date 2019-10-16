@@ -223,19 +223,21 @@ class Config
         );
     }
 
-    public function getDeclineNotificationSubject()
+    public function getDeclineNotificationSubject($scopeId = 0)
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/title',
-            ScopeInterface::SCOPE_STORES
+            ScopeInterface::SCOPE_STORES,
+            $scopeId
         );
     }
 
-    public function getDeclineNotificationContent()
+    public function getDeclineNotificationContent($scopeId = 0)
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/content',
-            ScopeInterface::SCOPE_STORES
+            ScopeInterface::SCOPE_STORES,
+            $scopeId
         );
     }
 }
