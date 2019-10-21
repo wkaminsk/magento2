@@ -134,13 +134,14 @@ class Declined implements ObserverInterface {
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         $order = $observer->getOrder();
+        $storeId = $order->getStoreId();
 
-        if (!$this->apiConfig->isDeclineNotificationEnabled()) {
+        if (!$this->apiConfig->isDeclineNotificationEnabled($storeId)) {
             return $this;
         }
 
-        $subject = $this->apiConfig->getDeclineNotificationSubject();
-        $content = $this->apiConfig->getDeclineNotificationContent();
+        $subject = $this->apiConfig->getDeclineNotificationSubject($storeId);
+        $content = $this->apiConfig->getDeclineNotificationContent($storeId);
 
         $shortCodes = [
             "{{customer_name}}",
