@@ -91,6 +91,7 @@ class Helper
         );
         if ($customer_id) {
             $customer_details = $this->_customerFactory->load($customer_id);
+            $customer_props['email'] = $customer_details->getEmail();
             $customer_props['created_at'] = $this->formatDateAsIso8601($customer_details->getCreatedAt());
             $customer_props['updated_at'] = $this->formatDateAsIso8601($customer_details->getUpdatedAt());
             try {
