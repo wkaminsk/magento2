@@ -1,7 +1,7 @@
 <?php
 namespace Riskified\Decider\Api\Order;
 use Riskified\OrderWebhook\Model;
-use Magento\Customer\Model\ResourceModel\Group\CollectionFactory as CustomerGroupFactory;
+use Magento\Customer\Model\ResourceModel\GroupRepository;
 class Helper
 {
     private $_order;
@@ -13,9 +13,9 @@ class Helper
     private $_categoryFactory;
     private $_storeManager;
     private $_customerFactory;
-    private $_customerGroupFactory;
+    private $_groupRepository;
     public function __construct(
-        CustomerGroupFactory $customerGroupFactory,
+        GroupRepository $groupRepository,
         \Magento\Framework\Logger\Monolog $logger,
         \Riskified\Decider\Api\Config $apiConfig,
         Log $apiLogger,
@@ -28,7 +28,7 @@ class Helper
     {
         $this->_logger = $logger;
         $this->_customerFactory = $customerFactory;
-        $this->_customerGroupFactory = $customerGroupFactory;
+        $this->_groupRepository = $groupRepository;
         $this->_messageManager = $messageManager;
         $this->_apiConfig = $apiConfig;
         $this->_apiLogger = $apiLogger;
@@ -97,7 +97,7 @@ class Helper
             $customer_details = $this->_customerFactory->load($customer_id);
             $customer_props['created_at'] = $this->formatDateAsIso8601($customer_details->getCreatedAt());
             $customer_props['updated_at'] = $this->formatDateAsIso8601($customer_details->getUpdatedAt());
-            $customer_props['account_type'] = $this->getCustomerGroupCode($customer_details);
+            $customer_props['account_type'] = $this->getCustomerGroupCode($customer_details->getGroupId());
             try {
                 $customer_orders = $this->_orderFactory->create()->addFieldToFilter('customer_id', $customer_id);
                 $customer_orders_count = $customer_orders->getSize();
@@ -116,16 +116,10 @@ class Helper
         }
         return new Model\Customer(array_filter($customer_props, 'strlen'));
     }
-    public function getCustomerGroupCode($customer)
+    public function getCustomerGroupCode($groupId)
     {
-        $groupId = $customer->getGroupId();
-        $customerGroup = $this->_customerGroupFactory->load($groupId, 'customer_group_id');
-
-        if($customerGroup){
-            $code = $customerGroup->getCustomerGroupCode();
-        }else{
-            $code = 'undefined';
-        }
+        $customerGroup = $this->_groupRepository->getById($groupId);
+        $code = $customerGroup->getCode();
 
         return $code;
     }
