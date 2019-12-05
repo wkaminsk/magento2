@@ -183,8 +183,12 @@ class Order
             'cart_token' => $this->session->getSessionId()
         );
 
-
         if ($this->_orderHelper->isAdmin()) {
+            if ($this->_backendAuthSession->isLoggedIn()) {
+                $order_array['source'] = 'admin';
+            }else{
+                $order_array['source'] = 'web';
+            }
             unset($order_array['browser_ip']);
             unset($order_array['cart_token']);
         }
