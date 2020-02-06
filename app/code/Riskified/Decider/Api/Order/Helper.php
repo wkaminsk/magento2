@@ -268,23 +268,6 @@ class Helper
                     } catch (\Exception $e) {
                     }
                     break;
-                case 'braintree_paypal':
-                    $cvv_result_code = $payment->getAdditionalInformation('cvvResponseCode');
-                    $credit_card_bin = $payment->getAdditionalInformation('bin');
-                    $houseVerification = $payment->getAdditionalInformation('avsStreetAddressResponseCode');
-                    $zipVerification = $payment->getAdditionalInformation('avsPostalCodeResponseCode');
-                    $avs_result_code = $houseVerification . ',' . $zipVerification;
-                    $payer_email = $payment->getAdditionalInformation('payerEmail');
-                    $transactionId =  $payment->getAdditionalInformation('paymentId');
-                    $payment_status = $payment->getAdditionalInformation('processorResponseText');
-
-                    return new Model\PaymentDetails(array_filter(array(
-                        'authorization_id' => $transactionId,
-                        'payer_email' => $payer_email,
-                        'payer_status' => $cvv_result_code,
-                        'payer_address_status' => $avs_result_code,
-                        'payment_status' => $payment_status,
-                    )));
                 case 'paypal_express':
                 case 'paypaluk_express':
                 case 'paypal_standard':
