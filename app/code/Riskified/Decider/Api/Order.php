@@ -192,10 +192,12 @@ class Order
             'cart_token' => $cartToken
         );
 
-
         if ($this->_orderHelper->isAdmin()) {
             unset($order_array['browser_ip']);
             unset($order_array['cart_token']);
+            $order_array['source'] = 'admin';
+        }else{
+            $order_array['source'] = 'web';
         }
 
         $order = new Model\Order(array_filter($order_array, 'strlen'));
