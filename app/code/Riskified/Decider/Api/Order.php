@@ -74,19 +74,27 @@ class Order
                     break;
                 case Api::ACTION_UPDATE:
                     $orderForTransport = $this->load($order);
+                    $this->_logger->log(serialize($orderForTransport));
                     $response = $transport->updateOrder($orderForTransport);
                     break;
                 case Api::ACTION_SUBMIT:
                     $orderForTransport = $this->load($order);
+                    $this->_logger->log(serialize($orderForTransport));
                     $response = $transport->submitOrder($orderForTransport);
                     break;
                 case Api::ACTION_CANCEL:
                     $orderForTransport = $this->_orderHelper->getOrderCancellation();
+                    $this->_logger->log(serialize($orderForTransport));
                     $response = $transport->cancelOrder($orderForTransport);
                     break;
                 case Api::ACTION_FULFILL:
                     $orderForTransport = $this->_orderHelper->getOrderFulfillments();
                     $response = $transport->fulfillOrder($orderForTransport);
+                    break;
+                case Api::ACTION_REFUND:
+                    $orderForTransport = $this->load($order);
+                    $this->_logger->log(serialize($orderForTransport));
+                    $response = $transport->refundOrder($orderForTransport);
                     break;
             }
             $eventData['response'] = $response;

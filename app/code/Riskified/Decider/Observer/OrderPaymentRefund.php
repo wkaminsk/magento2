@@ -24,8 +24,9 @@ class OrderPaymentRefund implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         try {
-            $order = $observer->getPayment()->getOrder();
-            $this->apiOrderLayer->post($order, Api::ACTION_CANCEL);
+            $creditMemo = $observer->getEvent()->getCreditmemo();
+            $order = $creditMemo->getOrder();
+            $this->apiOrderLayer->post($order, Api::ACTION_REFUND);
         } catch(\Exception $e) {
             $this->messageManager->addErrorMessage(
                 __("Riskified API Respond : %1", $e->getMessage())
