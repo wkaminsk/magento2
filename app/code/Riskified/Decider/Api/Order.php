@@ -46,8 +46,6 @@ class Order
         $this->session = $session;
         $this->date = $date;
         $this->queueFactory = $queueFactory;
-
-        $this->_api->initSdk();
     }
 
     public function post($order, $action)
@@ -61,6 +59,7 @@ class Order
         if (!$order) {
             throw new \Exception("Order doesn't not exists");
         }
+        $this->_api->initSdk($order);
         $this->_orderHelper->setOrder($order);
         $eventData = array(
             'order' => $order,

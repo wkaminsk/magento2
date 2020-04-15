@@ -25,12 +25,13 @@ class Api
         $this->_apiConfig = $apiConfig;
     }
 
-    public function initSdk()
+    public function initSdk($order = null)
     {
         $authToken = $this->_apiConfig->getAuthToken();
         $env = constant($this->_apiConfig->getConfigEnv());
         $shopDomain = $this->_apiConfig->getShopDomain();
         $this->version = $this->_apiConfig->getExtensionVersion();
+        $this->_apiConfig->setStore($order);
 
         Riskified::init($shopDomain, $authToken, $env, Validations::SKIP);
     }

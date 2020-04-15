@@ -10,6 +10,7 @@ class Config
     private $cookieManager;
     private $fullModuleList;
     private $checkoutSession;
+    private $store;
 
     const BEACON_URL = 'beacon.riskified.com';
 
@@ -43,7 +44,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/key',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -51,7 +52,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/order_status_sync',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -59,7 +60,7 @@ class Config
     {
         return '\Riskified\Common\Env::' . $this->_scopeConfig->getValue(
                 'riskified/riskified/env',
-                ScopeInterface::SCOPE_STORES
+                $this->getStore()
             );
     }
 
@@ -72,7 +73,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/auto_invoice_enabled',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -80,7 +81,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/auto_invoice_capture_case',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -93,7 +94,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/domain',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -107,7 +108,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/declined_state',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -116,7 +117,7 @@ class Config
         $state = $this->getDeclinedState();
         return $this->_scopeConfig->getValue(
             'riskified/riskified/declined_status_' . $state,
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -124,7 +125,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/riskified/approved_state',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -133,7 +134,7 @@ class Config
         $state = $this->getApprovedState();
         return $this->_scopeConfig->getValue(
             'riskified/riskified/approved_status_' . $state,
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -141,7 +142,7 @@ class Config
     {
         return (bool)$this->_scopeConfig->getValue(
             'riskified/riskified/debug_logs',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -149,7 +150,7 @@ class Config
     {
         return (bool)$this->_scopeConfig->getValue(
             'riskified/riskified/auto_invoice_enabled',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -157,7 +158,7 @@ class Config
     {
         $captureCase = $this->_scopeConfig->getValue(
             'riskified/riskified/auto_invoice_capture_case',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
 
         $availableStatuses = [
@@ -176,7 +177,7 @@ class Config
     {
         $captureCase = $this->_scopeConfig->getValue(
             'riskified/riskified/auto_invoice_capture_case',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
 
         $avialableStatuses =  [
@@ -195,7 +196,7 @@ class Config
     {
         return (bool)$this->_scopeConfig->getValue(
             'riskified/decline_notification/enabled',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -203,7 +204,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/email_identity',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -211,7 +212,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'trans_email/ident_' . $this->getDeclineNotificationSender() . '/email',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -219,7 +220,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'trans_email/ident_' . $this->getDeclineNotificationSender() . '/name',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -227,7 +228,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/title',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
     }
 
@@ -235,7 +236,17 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/content',
-            ScopeInterface::SCOPE_STORES
+            $this->getStore()
         );
+    }
+
+    public function setStore($order)
+    {
+        $this->store = $order->getStore();
+    }
+
+    public function getStore()
+    {
+        return (!is_null($this->store)) ? $this->store : ScopeInterface::SCOPE_STORES;
     }
 }
