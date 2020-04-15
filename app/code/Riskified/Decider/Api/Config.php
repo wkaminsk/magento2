@@ -200,7 +200,7 @@ class Config
     {
         return (bool)$this->_scopeConfig->getValue(
             'riskified/decline_notification/enabled',
-            $this->getStore(),
+            ScopeInterface::SCOPE_STORES,
             $scopeId
         );
     }
@@ -238,7 +238,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/title',
-            $this->getStore(),
+            ScopeInterface::SCOPE_STORES,
             $scopeId
         );
     }
@@ -252,7 +252,7 @@ class Config
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/content',
-            $this->getStore(),
+            ScopeInterface::SCOPE_STORES,
             $scopeId
         );
     }
