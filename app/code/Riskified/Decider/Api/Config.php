@@ -192,11 +192,16 @@ class Config
         return $captureCase;
     }
 
-    public function isDeclineNotificationEnabled()
+    /**
+     * When scopeId is not defined checks if Decline Notification is enabled for Default Store View.
+     * @return bool
+     */
+    public function isDeclineNotificationEnabled($scopeId = 0)
     {
         return (bool)$this->_scopeConfig->getValue(
             'riskified/decline_notification/enabled',
-            $this->getStore()
+            $this->getStore(),
+            $scopeId
         );
     }
 
@@ -224,27 +229,47 @@ class Config
         );
     }
 
-    public function getDeclineNotificationSubject()
+    /**
+     * If scopeId is not defined returns Decline Notification Subject for Default Store View.
+     * @param int $scopeId
+     * @return mixed
+     */
+    public function getDeclineNotificationSubject($scopeId = 0)
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/title',
-            $this->getStore()
+            $this->getStore(),
+            $scopeId
         );
     }
 
-    public function getDeclineNotificationContent()
+    /**
+     * If scopeId is not defined returns Decline Notification Content for Default Store View.
+     * @param int $scopeId
+     * @return mixed
+     */
+    public function getDeclineNotificationContent($scopeId = 0)
     {
         return $this->_scopeConfig->getValue(
             'riskified/decline_notification/content',
-            $this->getStore()
+            $this->getStore(),
+            $scopeId
         );
     }
 
+    /**
+     * Sets store id.
+     * @param $id
+     */
     public function setStore($id)
     {
         $this->store = $id;
     }
 
+    /**
+     * Returns store id. If not defined returns default store value.
+     * @return string
+     */
     public function getStore()
     {
         return (!is_null($this->store)) ? $this->store : ScopeInterface::SCOPE_STORES;
