@@ -31,7 +31,8 @@ class Api
         $env = constant($this->_apiConfig->getConfigEnv());
         $shopDomain = $this->_apiConfig->getShopDomain();
         $this->version = $this->_apiConfig->getExtensionVersion();
-        $this->_apiConfig->setStore($order);
+        $storeId = (!is_null($order)) ? $order->getStore() : null;
+        $this->_apiConfig->setStore($storeId);
 
         Riskified::init($shopDomain, $authToken, $env, Validations::SKIP);
     }

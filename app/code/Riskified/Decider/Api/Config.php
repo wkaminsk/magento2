@@ -240,9 +240,9 @@ class Config
         );
     }
 
-    public function setStore($order)
+    public function setStore($id)
     {
-        $this->store = $order->getStore();
+        $this->store = $id;
     }
 
     public function getStore()
