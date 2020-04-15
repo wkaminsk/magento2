@@ -247,6 +247,6 @@ class Config
 
     public function getStore()
     {
-        return (!is_null($this->store)) ? $this->store : ScopeInterface::SCOPE_STORES;
+        return (!is_null($this->store)) ? $this->store : null;
     }
 }
