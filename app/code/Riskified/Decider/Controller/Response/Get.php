@@ -75,6 +75,7 @@ class Get extends Action
         $logger->log("Start Try");
 
         try {
+            $this->api->initSdk();
             $notification = $this->api->parseRequest($request);
             $id = $notification->id;
 
