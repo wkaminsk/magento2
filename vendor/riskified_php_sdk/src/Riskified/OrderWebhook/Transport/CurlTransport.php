@@ -44,7 +44,6 @@ class CurlTransport extends AbstractTransport {
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_USERAGENT => $this->user_agent,
             CURLOPT_TIMEOUT => $this->timeout,
-            CURLOPT_DNS_USE_GLOBAL_CACHE => $this->dns_cache,
             CURLOPT_FAILONERROR => false
         );
         curl_setopt_array($ch, $curl_options);
