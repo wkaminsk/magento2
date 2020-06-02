@@ -54,13 +54,12 @@ class Order
             return;
         }
 
-        $transport = $this->_api->getTransport();
-
         if (!$order) {
             throw new \Exception("Order doesn't not exists");
         }
         $this->_orderHelper->setOrder($order);
         $this->_api->initSdk($order);
+        $transport = $this->_api->getTransport();
 
         $eventData = array(
             'order' => $order,
