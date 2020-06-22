@@ -255,4 +255,14 @@ class Config
             $scopeId
         );
     }
+
+    /**
+     * @return bool
+     */
+    public function getCustomerLoginHandleEnabled()
+    {
+        return (bool) $this->_scopeConfig->getValue(
+            'riskified/riskified/connect_customer'
+        );
+    }
 }

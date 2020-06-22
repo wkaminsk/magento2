@@ -151,6 +151,15 @@
                         <field id="*/riskified_general/enabled">1</field>
                     </depends>
                 </field>
+                <field id="connect_customer" translate="label" type="select" sortOrder="130" showInDefault="1"
+                       showInWebsite="1" showInStore="1">
+                    <label>Sync customer login</label>
+                    <comment><![CDATA[Send information about customer login status (login successful, login failed to Riskified API.)]]></comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="*/riskified_general/enabled">1</field>
+                    </depends>
+                </field>
                 <field id="debug_logs" translate="label" type="select" sortOrder="130" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Debug logs</label>

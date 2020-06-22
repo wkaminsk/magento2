@@ -33,8 +33,20 @@
             </argument>
         </arguments>
     </type>
-    <type name="Magento\Framework\App\Request\CsrfValidator">
-        <plugin name="csrf_validator_skip" type="Riskified\Decider\Plugin\CsrfValidatorSkip" />
+
+    <type name="Magento\Customer\Api\AccountManagementInterface">
+        <plugin name="riskfied_validate_customer_login" type="Riskified\Decider\Plugin\Customer\AccountManagementPlugin"/>
     </type>
 
+    <preference
+        for="Riskified\Decider\Api\Data\ClientDetailsInterface"
+        type="Riskified\Decider\Model\Api\Data\ClientDetails"
+    />
+    <preference
+        for="Riskified\Decider\Api\Data\SessionDetailsInterface"
+        type="Riskified\Decider\Model\Api\Data\SessionDetails"
+    />
+<!--    <type name="Magento\Framework\App\Request\CsrfValidator">-->
+<!--        <plugin name="csrf_validator_skip" type="Riskified\Decider\Plugin\CsrfValidatorSkip" />-->
+<!--    </type>-->
 </config>
