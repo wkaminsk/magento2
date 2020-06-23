@@ -33,6 +33,9 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Customer\Api\AccountManagementInterface">	
+        <plugin name="riskfied_validate_customer_login" type="Riskified\Decider\Plugin\Customer\AccountManagementPlugin"/>	
+    </type>	
 
     <preference
         for="Riskified\Decider\Api\Data\ClientDetailsInterface"
