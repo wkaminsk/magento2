@@ -14,7 +14,7 @@ class Order
     private $_messageManager;
     private $_backendAuthSession;
     private $_orderFactory;
-    private $logger;
+    private $_logger;
     private $session;
     private $date;
     private $queueFactory;
@@ -42,12 +42,10 @@ class Order
         $this->_backendAuthSession = $backendAuthSession;
         $this->_messageManager = $messageManager;
         $this->_orderFactory = $orderFactory;
-        $this->logger = $logger;
+        $this->_logger = $logger;
         $this->session = $session;
         $this->date = $date;
         $this->queueFactory = $queueFactory;
-
-        $this->_api->initSdk();
     }
 
     public function post($order, $action)
@@ -56,12 +54,13 @@ class Order
             return;
         }
 
-        $transport = $this->_api->getTransport();
-
         if (!$order) {
             throw new \Exception("Order doesn't not exists");
         }
         $this->_orderHelper->setOrder($order);
+        $this->_api->initSdk($order);
+        $transport = $this->_api->getTransport();
+
         $eventData = array(
             'order' => $order,
             'action' => $action
@@ -92,7 +91,7 @@ class Order
                     $response = $transport->fulfillOrder($orderForTransport);
                     break;
                 case Api::ACTION_REFUND:
-                    $orderForTransport = $this->load($order);
+                    $orderForTransport = $this->loadRefund();
                     $this->_logger->log(serialize($orderForTransport));
                     $response = $transport->refundOrder($orderForTransport);
                     break;
@@ -158,6 +157,16 @@ class Order
     {
         $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
         return $objectManager->get('Magento\Customer\Model\Session');
+    }
+
+    private function loadRefund()
+    {
+        $refund = new Model\Refund();
+        $refund->id = strval($this->_orderHelper->getOrderOrigId());
+        $refundDetails = $this->_orderHelper->getRefundDetails();
+        $refund->refunds = array_filter($refundDetails, 'strlen');
+
+        return $refund;
     }
 
     private function load($model)
@@ -228,7 +237,7 @@ class Order
             return;
         }
 
-        $this->logger->log('Dispatching event for order ' . $order->getId() . ' with status "' . $status .
+        $this->_logger->log('Dispatching event for order ' . $order->getId() . ' with status "' . $status .
             '" old status "' . $oldStatus . '" and description "' . $description . '"');
         $eventData = array(
             'order' => $order,
@@ -305,7 +314,7 @@ class Order
 
     public function scheduleSubmissionRetry(\Magento\Sales\Model\Order $order, $action)
     {
-        $this->logger->log("Scheduling submission retry for order " . $order->getId());
+        $this->_logger->log("Scheduling submission retry for order " . $order->getId());
 
         try {
             $existingRetries = $this->queueFactory->create()->getCollection()
@@ -320,10 +329,10 @@ class Order
                         'updated_at' => $this->date->gmtDate()
                 ))->save();
 
-                $this->logger->log("New retry scheduled successfully");
+                $this->_logger->log("New retry scheduled successfully");
             }
         } catch (\Exception $e) {
-            $this->logger->logException($e);
+            $this->_logger->logException($e);
         }
     }
 

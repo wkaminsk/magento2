@@ -155,6 +155,11 @@ abstract class AbstractTransport {
         return $this->send_checkout($checkout, 'checkout_denied');
     }
 
+    public function login($login) {
+        $this->url = Riskified::getHost('account');
+        return $this->send_account_event($login, 'login');
+    }
+
     public function sendHistoricalOrders($orders) {
         $joined = join(',',array_map(function($order) { return $order->toJson(); }, $orders));
         $json = '{"orders":['.$joined.']}';
