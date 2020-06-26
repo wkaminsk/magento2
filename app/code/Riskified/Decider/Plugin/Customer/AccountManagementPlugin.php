@@ -92,7 +92,7 @@ class AccountManagementPlugin
         try {
             $this->inputData = $args;
 
-            $proceed(...$args);
+            $result = $proceed(...$args);
         } catch (InvalidEmailOrPasswordException $e) {
             $this
                 ->prepareFailedLoginCustomerObject($e)
@@ -116,6 +116,8 @@ class AccountManagementPlugin
         $this
             ->prepareSuccessfulLoginCustomerObject()
             ->callApi();
+
+        return $result;
     }
 
     /**
