@@ -49,7 +49,7 @@ abstract class AbstractTransport {
      */
     public function __construct($signature, $url = null) {
         $this->signature = $signature;
-        $this->url = ($url == null) ? Riskified::getHostByEnv() : $url;
+        $this->url = ($url == null) ? Riskified::getHost() : $url;
         $this->user_agent = 'riskified_php_sdk/' . Riskified::VERSION;
         $this->use_https = Riskified::$env != Env::DEV;
     }
