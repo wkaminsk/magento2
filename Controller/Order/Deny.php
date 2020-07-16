@@ -15,23 +15,23 @@ class Deny extends \Riskified\Decider\Controller\AdviceAbstract
      */
     public function execute()
     {
-        $adviseEnabled = $this->isEnabled();
-        if($adviseEnabled == 0){
-            return  $this->resultJsonFactory->create()->setData(['advice_status' => 'disabled']);
+        if ($this->isEnabled() === false) {
+            return  $this->resultJsonFactory->create()->setData(['status' => 'disabled']);
         }
+
         $payload = $this->request->getParams();
         $quoteId = $this->getQuoteId($payload['quote_id']);
-        $quoteFactory = $this->quoteFactory;
-        $quote = $quoteFactory->create()->load($quoteId);
-        if(!is_null($quote)){
+        $quote = $this->cartRespository->get($quoteId);
+
+        if (!is_null($quote)) {
             $message = __('deny_controller_deny') . $quoteId;
-            //saves 3D Secure Response data in quotePayment table (additional data)
-            $payload['date'] = $currentDate = date('Y-m-d H:i:s', time());
+
+            $payload['date'] = date('Y-m-d H:i:s', time());
             $this->updateQuotePaymentDetailsInDb($quote, $payload);
             //Riskified defined order as fraud - order data is send to Riskified
             $this->sendDeniedOrderToRiskified($quote);
             $this->logger->log($message);
-        }else{
+        } else {
             $message = __('deny_controller_not_found') . $quoteId;
             $this->logger->log($message);
         }
@@ -41,13 +41,13 @@ class Deny extends \Riskified\Decider\Controller\AdviceAbstract
 
     /**
      * Saves quote payment details (additional data).
-     * @param $quoteId
+     * @param $quote
      * @param $paymentDetails
      * @throws \Exception
      */
     protected function updateQuotePaymentDetailsInDb($quote, $paymentDetails)
     {
-        if(isset($quote)){
+        if (isset($quote)) {
             $this->logger->log(__('advise_log_quote_found') . $quote->getEntityId());
             $quotePayment = $quote->getPayment();
             $additionalData = $quotePayment->getAdditionalData();
@@ -57,41 +57,14 @@ class Deny extends \Riskified\Decider\Controller\AdviceAbstract
             }
             $additionalData['3d_secure'] = $paymentDetails;
             $additionalData = json_encode($additionalData);
-            try{
+            try {
                 $quotePayment->setAdditionalData($additionalData);
                 $quotePayment->save();
-            }catch(RuntimeException $e){
+            } catch (\RuntimeException $e) {
                 $this->logger->log(__('advise_log_cannot_save') . $e->getMessage());
             }
-        }else{
+        } else {
             $this->logger->log(__('advise_log_no_quote_found') . $quote->getEntityId());
         }
-    }
-
-    /**
-     * @param $quote
-     * @return mixed
-     */
-    protected function sendDeniedOrderToRiskified($quote)
-    {
-        return parent::sendDeniedOrderToRiskified($quote);
-    }
-
-    /**
-     * @param $cartId
-     * @return mixed
-     */
-    protected function getQuoteId($cartId)
-    {
-        return parent::getQuoteId($cartId);
-    }
-
-    /**
-     * Checks if Advice Call is enabled in admin panel
-     * @return mixed
-     */
-    protected function isEnabled()
-    {
-        return parent::isEnabled();
     }
 }

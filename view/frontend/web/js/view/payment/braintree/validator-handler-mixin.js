@@ -4,15 +4,14 @@ define([
     'mage/storage',
     'Magento_Braintree/js/view/payment/3d-secure',
     'Magento_Checkout/js/model/quote',
-    'Magento_Braintree/js/view/payment/adapter'
-], function ($, wrapper, storage, verify3DSecure, quote, paymentAdapter) {
+    'Riskified_Decider/js/model/advice',
+], function ($, wrapper, storage, verify3DSecure, quote, advice) {
     'use strict';
 
 
     function getPaymentMethod()
     {
         let choosenPaymentMethod = $(".payment-method-title").find('input[type="radio"]:checked');
-
         return choosenPaymentMethod.attr('id');
     }
 
@@ -24,40 +23,35 @@ define([
 
             // no available validators
             if (!self.validators.length) {
-                var serviceUrl = window.location.origin + "/decider/advice/call",
-                    payload = {
-                        mode: 'braintree-3DS-passed',
-                        quote_id: quote.getQuoteId(),
-                        email : quote.guestEmail,
-                        gateway: "braintree_cc"
-                    },
-                    adviceStatus = false;
+                let payload = {
+                    mode: 'braintree-3DS-passed',
+                    quote_id: quote.getQuoteId(),
+                    email: quote.guestEmail,
+                    gateway: "braintree_cc"
+                };
 
-                $.ajax({
-                    method: "POST",
-                    async: false,
-                    url: serviceUrl,
-                    data: payload
-                }).done(function( status ){
-                    var riskifiedMessage = status.message;
-                    adviceStatus = status.advice_status;
-                });
-
-                if(adviceStatus === true){
+                let generalCallback = function () {
                     callback();
-                    return;
-                } else {
-                    if (adviceStatus == 3){
-                        self.showError(riskifiedMessage);
-                        return;
-                    } else if (adviceStatus == 'disabled'){
-                        callback();
+                };
 
-                        return;
-                    } else {
-                        verify3DSecure.setConfig(config[verify3DSecure.getCode()]);
-                        self.add(verify3DSecure);
-                    }
+                let denyCallback = function () {
+                    callback();
+                    throw new Error();
+                };
+                let disabledCallback = function () {
+                    verify3DSecure.setConfig(config[verify3DSecure.getCode()]);
+                    self.add(verify3DSecure);
+                };
+
+                try {
+                    advice.validate(
+                        payload,
+                        generalCallback,
+                        denyCallback,
+                        disabledCallback
+                    );
+                } catch (e) {
+                    return false;
                 }
             }
 
@@ -72,19 +66,6 @@ define([
                 }).fail(function (error) {
                 self.showError(error);
             });
-        };
-        braintreeValidatorHandler.initRiskifiedAdviceCall = function(serviceUrl, payload) {
-            return storage.post(
-                serviceUrl, payload
-            ).fail(
-                function (response) {
-                    errorProcessor.process(response, messageContainer);
-                }
-            ).always(
-                function () {
-                    fullScreenLoader.stopLoader();
-                }
-            );
         };
 
         return braintreeValidatorHandler;

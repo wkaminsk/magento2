@@ -14,7 +14,8 @@ define([
     'Magento_Checkout/js/model/payment/additional-validators',
     'Magento_Vault/js/view/payment/vault-enabler',
     'Magento_Checkout/js/action/create-billing-address',
-    'mage/translate'
+    'mage/translate',
+    'Riskified_Decider/js/model/advice'
 ], function (
     $,
     _,
@@ -25,7 +26,8 @@ define([
     additionalValidators,
     VaultEnabler,
     createBillingAddress,
-    $t
+    $t,
+    advice
 ) {
     'use strict';
 
@@ -37,24 +39,12 @@ define([
          */
         beforePlaceOrder: function (data) {
             //check Riskified-Api-Advise-Call response
-            var serviceUrl = window.location.origin + "/decider/advice/call",
-                params = { quote_id: quote.getQuoteId(), gateway: "braintree_paypal", email:  data.details.email},
-                adviseCallStatus = false;
+            let params = { quote_id: quote.getQuoteId(), gateway: "braintree_paypal", email:  data.details.email};
 
-            $.ajax({
-                method: "POST",
-                async: false,
-                data: params,
-                url: serviceUrl
-            }).done(function( status ){
-                //adjust status for 3D Secure validation
-                if(status.advice_status == true){
-                    adviseCallStatus = true;
-                }
-            });
-
-            if(adviseCallStatus == false){
-                return;
+            try {
+                advice.validate(params);
+            } catch (e) {
+                return false;
             }
 
             this.setPaymentMethodNonce(data.nonce);

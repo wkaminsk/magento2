@@ -17,9 +17,11 @@ define(
         'Magento_Checkout/js/action/select-payment-method',
         'Adyen_Payment/js/threeds2-js-utils',
         'Adyen_Payment/js/model/threeds2',
-        'Magento_Checkout/js/model/error-processor'
+        'Magento_Checkout/js/model/error-processor',
+        'Riskified_Decider/js/model/advice'
+
     ],
-    function ($, ko, Component, customer, creditCardData, additionalValidators, quote, installmentsHelper, url, VaultEnabler, urlBuilder, storage, fullScreenLoader, setPaymentMethodAction, selectPaymentMethodAction, threeDS2Utils, threeds2, errorProcessor) {
+    function ($, ko, Component, customer, creditCardData, additionalValidators, quote, installmentsHelper, url, VaultEnabler, urlBuilder, storage, fullScreenLoader, setPaymentMethodAction, selectPaymentMethodAction, threeDS2Utils, threeds2, errorProcessor, advice) {
 
         'use strict';
 
@@ -36,51 +38,35 @@ define(
                     threeDS2Status = response.threeDS2,
                     quoteThreeDSecureState = quote.getThreeDSecureStatus();
 
-                //avoid advise-call process duplication
                 if(quoteThreeDSecureState == 0){
-                    //check Riskified-Api-Advise-Call response
-                    var adviseCallUrl = window.location.origin + "/decider/advice/call",
-                        payload = {
+                    function disabledCallback() {
+                        self.basicThreeDValidators(response);
+                        quote.setThreeDSecureStatus(quoteThreeDSecureState + 1);
+                        self.renderThreeDS2Component(response.type, response.token);
+                    }
+
+                    function successCallback() {
+                        window.location.replace(url.build(
+                            window.checkoutConfig.payment[quote.paymentMethod().method].redirectUrl)
+                        );
+                    }
+
+                    function denyCallback() {
+                        fullScreenLoader.stopLoader();
+                        self.isPlaceOrderActionAllowed(false);
+                        alert.showError("The order was declined.");
+                    }
+
+                    try {
+                        let payload = {
                             quote_id: quote.getQuoteId(),
                             email : quote.guestEmail,
                             gateway: "adyen_cc"
                         };
-                    //advise call
-                    $.ajax({
-                        method: "POST",
-                        async: false,
-                        data: payload,
-                        url: adviseCallUrl
-                    }).done(function( status ){
-                        //adjust status for 3D Secure validation
-                        threeDS2Status = status.advice_status;
-                    });
 
-                    //when Riskified Advise is disabled in admin
-                    if(threeDS2Status == "disabled"){
-                        self.basicThreeDValidators(response);
-                        quote.setThreeDSecureStatus(quoteThreeDSecureState + 1);
-                    }else{
-                        if (threeDS2Status == 3) {
-                            fullScreenLoader.stopLoader();
-                            self.isPlaceOrderActionAllowed(false);
-                            alert.showError("The order was declined.");
-                        } else if(!!response.threeDS2) {
-                            // render 3D Secure iframe component
-                            self.renderThreeDS2Component(response.type, response.token);
-                        } else {
-                            //when 3Dsecure not enabled in admin but Riskifed requires it.
-                            if(threeDS2Status !== true){
-                                alert('Adyen doesnt need 3D Secure but Riskified does.');
-                                self.basicThreeDValidators(response);
-                            }else{
-                                window.location.replace(url.build(
-                                    window.checkoutConfig.payment[quote.paymentMethod().method].redirectUrl)
-                                );
-                            }
-                        }
-                        //change quote 3D Secure state
-                        quote.setThreeDSecureStatus(quoteThreeDSecureState + 1);
+                        advice.validate(payload, successCallback, denyCallback, disabledCallback);
+                    } catch(e) {
+                        return false;
                     }
                 }else{
                     self.basicThreeDValidators(response);

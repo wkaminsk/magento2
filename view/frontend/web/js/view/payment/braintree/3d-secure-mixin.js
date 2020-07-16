@@ -8,8 +8,9 @@ define([
     'jquery',
     'Magento_Braintree/js/view/payment/adapter',
     'Magento_Checkout/js/model/quote',
+    'Riskified_Decider/js/model/advice',
     'mage/translate'
-], function ($, braintree, quote, $t) {
+], function ($, braintree, quote, advice, $t) {
     'use strict';
 
         return function (braintreeThreedSecure) {
@@ -65,21 +66,21 @@ define([
                         state.resolve();
                     } else {
                         //saving 3D Secure Refuse reason in db.
-                        var serviceUrl = window.location.origin + "/decider/order/deny",
-                            payload = {
-                                mode: 'braintree-3DS-deny',
-                                gateway: "braintree_cc",
-                                quote_id: quote.getQuoteId(),
-                                nonce: response.nonce,
-                                liabilityShiftPossible: response.verificationDetails.liabilityShiftPossible,
-                                liabilityShifted: response.verificationDetails.liabilityShifted
-                            };
-                        $.ajax({
-                            method: "POST",
-                            async: false,
-                            url: serviceUrl,
-                            data: payload
-                        });
+                        let payload = {
+                            mode: 'braintree-3DS-deny',
+                            gateway: "braintree_cc",
+                            quote_id: quote.getQuoteId(),
+                            nonce: response.nonce,
+                            liabilityShiftPossible: response.verificationDetails.liabilityShiftPossible,
+                            liabilityShifted: response.verificationDetails.liabilityShifted
+                        };
+
+                        try {
+                            advice.deny(payload);
+                        } catch (e) {
+                            return false;
+                        }
+
                         state.reject($t('Please try again with another form of payment.'));
                     }
                 });

@@ -1,16 +1,15 @@
 <?php
 namespace Riskified\Decider\Controller;
 
-use Riskified\Decider\Model\Api\Request\Advice as AdviceRequest;
-use Riskified\Decider\Model\Api\Builder\Advice as AdviceBuilder;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Riskified\Decider\Model\Api\Order as OrderApi;
-use Riskified\Decider\Model\Api\Log as Logger;
-use Magento\Quote\Model\QuoteFactory;
-use Magento\Sales\Model\OrderFactory;
-use http\Exception\RuntimeException;
-use Riskified\Decider\Model\Api\Api;
 use Magento\Framework\Registry;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Sales\Model\OrderFactory;
+use Riskified\Decider\Model\Api\Api;
+use Riskified\Decider\Model\Api\Builder\Advice as AdviceBuilder;
+use Riskified\Decider\Model\Api\Log as Logger;
+use Riskified\Decider\Model\Api\Order as OrderApi;
+use Riskified\Decider\Model\Api\Request\Advice as AdviceRequest;
 
 abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
 {
@@ -52,9 +51,9 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
      */
     protected $apiOrderLayer;
     /**
-     * @var QuoteFactory
+     * @var CartRepositoryInterface
      */
-    protected $quoteFactory;
+    protected $cartRespository;
     /**
      * @var OrderFactory
      */
@@ -76,7 +75,7 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
      * @param \Magento\Framework\App\Request\Http $request
      * @param \Magento\Checkout\Model\Session $session
      * @param ScopeConfigInterface $scopeConfig
-     * @param QuoteFactory $quoteFactory
+     * @param CartRepositoryInterface $cartRespository
      * @param OrderFactory $orderFactory
      * @param AdviceBuilder $adviceBuilder
      * @param AdviceRequest $adviceRequest
@@ -92,7 +91,7 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
         \Magento\Framework\App\Request\Http $request,
         \Magento\Checkout\Model\Session $session,
         ScopeConfigInterface $scopeConfig,
-        QuoteFactory $quoteFactory,
+        \Magento\Quote\Api\CartRepositoryInterface $cartRespository,
         OrderFactory $orderFactory,
         AdviceBuilder $adviceBuilder,
         AdviceRequest $adviceRequest,
@@ -100,12 +99,12 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
         Registry $registry,
         Logger $logger,
         Api $api
-    ){
+    ) {
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->adviceBuilder = $adviceBuilder;
         $this->adviceRequest = $adviceRequest;
-        $this->quoteFactory = $quoteFactory;
+        $this->cartRespository = $cartRespository;
         $this->orderFactory = $orderFactory;
         $this->scopeConfig = $scopeConfig;
         $this->apiOrderLayer = $orderApi;
@@ -124,14 +123,16 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
     {
         $orderFactory = $this->orderFactory->create();
         $order = $orderFactory->loadByAttribute('quote_id', $quote->getEntityId());
-        //when order hasn't been already set use quote instead
-        if(is_numeric($order->getEntityId()) != 1){
+
+        if (is_numeric($order->getEntityId()) != 1) {
             $order = $quote;
         }
         $this->apiOrderLayer->post(
             $order,
             Api::ACTION_CHECKOUT_DENIED
         );
+
+        return $this;
     }
 
     /**
@@ -141,9 +142,9 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
      */
     protected function getQuoteId($cartId)
     {
-        if(is_numeric($cartId)){
+        if (is_numeric($cartId)) {
             $quoteId = $cartId;
-        }else{
+        } else {
             $quoteIdMask = $this->quoteIdMaskFactory->create()->load($cartId, 'masked_id');
             $quoteId = $quoteIdMask->getQuoteId();
         }
@@ -159,7 +160,7 @@ abstract class AdviceAbstract extends \Magento\Framework\App\Action\Action
     {
         $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORE;
         $adviseEnabled = $this->scopeConfig->getValue(self::XML_ADVISE_ENABLED, $storeScope);
-        
-        return  intval($adviseEnabled);
+
+        return (bool) $adviseEnabled;
     }
 }
