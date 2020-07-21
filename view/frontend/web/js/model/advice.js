@@ -5,28 +5,67 @@
 /**
  * @api
  */
-define(['jquery', 'mage/url'], function ($, urlBuilder) {
+define([
+    'jquery',
+    'Magento_Checkout/js/model/quote',
+    'mage/url'
+], function ($, quote, urlBuilder) {
     'use strict';
 
     return {
-        validate : function(payload, successfullCallback, denyCallback, disabledCallback) {
-            return this.doCall("/decider/advice/call", payload).success((response) => {
+        payload : {},
+        additionalPayload : {},
+        setGateway: function(gateway) {
+          this.gateway = gateway;
+        },
+        setMode: function(mode) {
+          this.mode = mode;
+        },
+        preparePayload : function() {
+            let payload = {
+                mode: this.mode,
+                quote_id: quote.getQuoteId(),
+                email: quote.guestEmail,
+                gateway: this.gateway
+            };
+
+            this.payload = {
+                ...payload,
+                ...this.additionalPayload
+            };
+        },
+        setAdditionalPayload : function(payload) {
+            this.additionalPayload = payload;
+        },
+        registerSuccessCallback : function(callback) {
+            this.successCallback = callback;
+        },
+        registerDenyCallback : function(callback) {
+            this.denyCallback = callback;
+        },
+        registerDisabledCallback : function(callback) {
+            this.disableCallback = callback;
+        },
+        validate : function() {
+            this.preparePayload();
+
+            return this.doCall("/decider/advice/call", this.payload).success((response) => {
                 let apiResponseStatus = response.status;
                 if (apiResponseStatus === 0){
-                    successfullCallback();
+                    this.successCallback();
                 } else {
                     if (apiResponseStatus === 3){
-                        denyCallback();
+                        this.denyCallback();
                     } else if (apiResponseStatus === 9999){
-                        disabledCallback();
+                        this.disableCallback();
                     } else {
-                        successfullCallback();
+                        this.successCallback();
                     }
                 }
             });
         },
-        deny : function(payload) {
-            return this.doCall("/decider/order/deny", payload);
+        deny : function() {
+            return this.doCall("/decider/order/deny", this.payload);
         },
         doCall : function(url, payload) {
             return $.ajax({

@@ -23,19 +23,11 @@ define([
 
             // no available validators
             if (!self.validators.length) {
-                let payload = {
-                    mode: 'braintree-3DS-passed',
-                    quote_id: quote.getQuoteId(),
-                    email: quote.guestEmail,
-                    gateway: "braintree_cc"
-                };
-
                 let generalCallback = function () {
                     callback();
                 };
 
                 let denyCallback = function () {
-                    callback();
                     throw new Error();
                 };
                 let disabledCallback = function () {
@@ -44,12 +36,11 @@ define([
                 };
 
                 try {
-                    advice.validate(
-                        payload,
-                        generalCallback,
-                        denyCallback,
-                        disabledCallback
-                    );
+                    advice
+                        .registerSuccessCallback(generalCallback)
+                        .registerDenyCallback(denyCallback)
+                        .registerDisabledCallback(disabledCallback)
+                        .validate();
                 } catch (e) {
                     return false;
                 }

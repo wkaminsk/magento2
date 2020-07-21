@@ -66,17 +66,18 @@ define([
                         state.resolve();
                     } else {
                         //saving 3D Secure Refuse reason in db.
-                        let payload = {
-                            mode: 'braintree-3DS-deny',
-                            gateway: "braintree_cc",
-                            quote_id: quote.getQuoteId(),
-                            nonce: response.nonce,
-                            liabilityShiftPossible: response.verificationDetails.liabilityShiftPossible,
-                            liabilityShifted: response.verificationDetails.liabilityShifted
-                        };
-
                         try {
-                            advice.deny(payload);
+                            let additionalPayload = {
+                                nonce: response.nonce,
+                                liabilityShiftPossible: response.verificationDetails.liabilityShiftPossible,
+                                liabilityShifted: response.verificationDetails.liabilityShifted
+                            };
+
+                            advice
+                                .setMode('braintree-3DS-deny')
+                                .setGateway('braintree_cc')
+                                .setAdditionalPayload(additionalPayload)
+                                .deny();
                         } catch (e) {
                             return false;
                         }

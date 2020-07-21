@@ -58,13 +58,12 @@ define(
                     }
 
                     try {
-                        let payload = {
-                            quote_id: quote.getQuoteId(),
-                            email : quote.guestEmail,
-                            gateway: "adyen_cc"
-                        };
-
-                        advice.validate(payload, successCallback, denyCallback, disabledCallback);
+                        advice
+                            .setGateway("adyen_cc")
+                            .registerSuccessCallback(successCallback)
+                            .registerDenyCallback(denyCallback)
+                            .registerDisabledCallback(disabledCallback)
+                            .validate();
                     } catch(e) {
                         return false;
                     }
