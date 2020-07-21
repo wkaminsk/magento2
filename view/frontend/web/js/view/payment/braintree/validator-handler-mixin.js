@@ -30,6 +30,7 @@ define([
                 let denyCallback = function () {
                     throw new Error();
                 };
+
                 let disabledCallback = function () {
                     verify3DSecure.setConfig(config[verify3DSecure.getCode()]);
                     self.add(verify3DSecure);
@@ -37,6 +38,8 @@ define([
 
                 try {
                     advice
+                        .setMode('braintree-3DS-passed')
+                        .setGateway('braintree_cc')
                         .registerSuccessCallback(generalCallback)
                         .registerDenyCallback(denyCallback)
                         .registerDisabledCallback(disabledCallback)

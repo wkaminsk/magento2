@@ -17,9 +17,13 @@ define([
         additionalPayload : {},
         setGateway: function(gateway) {
           this.gateway = gateway;
+
+          return this;
         },
         setMode: function(mode) {
           this.mode = mode;
+
+            return this;
         },
         preparePayload : function() {
             let payload = {
@@ -36,15 +40,23 @@ define([
         },
         setAdditionalPayload : function(payload) {
             this.additionalPayload = payload;
+
+            return this;
         },
         registerSuccessCallback : function(callback) {
             this.successCallback = callback;
+
+            return this;
         },
         registerDenyCallback : function(callback) {
             this.denyCallback = callback;
+
+            return this;
         },
         registerDisabledCallback : function(callback) {
             this.disableCallback = callback;
+
+            return this;
         },
         validate : function() {
             this.preparePayload();
@@ -52,14 +64,22 @@ define([
             return this.doCall("/decider/advice/call", this.payload).success((response) => {
                 let apiResponseStatus = response.status;
                 if (apiResponseStatus === 0){
-                    this.successCallback();
+                    if (this.successCallback) {
+                        this.successCallback();
+                    }
                 } else {
                     if (apiResponseStatus === 3){
-                        this.denyCallback();
+                        if (this.denyCallback) {
+                            this.denyCallback();
+                        }
                     } else if (apiResponseStatus === 9999){
-                        this.disableCallback();
+                        if (this.disableCallback) {
+                            this.disableCallback();
+                        }
                     } else {
-                        this.successCallback();
+                        if (this.successCallback) {
+                            this.successCallback();
+                        }
                     }
                 }
             });
