@@ -14,24 +14,6 @@ define([
     'use strict';
 
         return function (braintreeThreedSecure) {
-
-            braintreeThreedSecure.config = null;
-
-            braintreeThreedSecure.setConfig = function(config) {
-                this.config = config;
-                this.config.thresholdAmount = parseFloat(config.thresholdAmount);
-            };
-
-            braintreeThreedSecure.getCode = function() {
-                return 'three_d_secure';
-            };
-
-            braintreeThreedSecure.isAmountAvailable = function(amount) {
-                amount = parseFloat(amount);
-
-                return amount >= this.config.thresholdAmount;
-            };
-
             braintreeThreedSecure.validate = function(context) {
                 var client = braintree.getApiClient(),
                     state = $.Deferred(),
@@ -74,7 +56,6 @@ define([
                             };
 
                             advice
-                                .setMode('braintree-3DS-deny')
                                 .setGateway('braintree_cc')
                                 .setAdditionalPayload(additionalPayload)
                                 .deny();

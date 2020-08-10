@@ -85,7 +85,7 @@ define([
             });
         },
         deny : function() {
-            return this.doCall("/decider/order/deny", this.payload);
+            return this.doCall("/decider/advice/deny", this.payload);
         },
         doCall : function(url, payload) {
             return $.ajax({

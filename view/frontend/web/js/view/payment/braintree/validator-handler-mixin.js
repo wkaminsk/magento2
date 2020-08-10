@@ -38,7 +38,6 @@ define([
 
                 try {
                     advice
-                        .setMode('braintree-3DS-passed')
                         .setGateway('braintree_cc')
                         .registerSuccessCallback(generalCallback)
                         .registerDenyCallback(denyCallback)

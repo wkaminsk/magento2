@@ -82,7 +82,6 @@ class Advice {
             [
                 "checkout" => [
                     "id" => $cart->getId(),
-                    "email" => isset($params['email']) ? $params['email'] : $customerObject->getEmail(),
                     "email" => $email,
                     "currency" => $currencyObject->getQuoteCurrencyCode(),
                     "total_price" => $cart->getGrandTotal(),
@@ -90,14 +89,12 @@ class Advice {
                         [
                             "avs_result_code" => "Y",
                             "credit_card_bin" => "492044",
-                            "credit_card_company" => "Visa",
                             "credit_card_company" => $ccCompany,
                             "credit_card_number" => "4111111111111111",
                             "cvv_result_code" => "M"
                         ]
                     ],
                     "_type" => 'credit_card',
-                    "gateway" => $paymentObject->getMethod(),
                     "gateway" => $gateway,
                 ]
             ]
@@ -112,7 +109,6 @@ class Advice {
      */
     public function request()
     {
-        $response =  $this->adviceRequestModel->call($this->json);
-        return $response;
+        return $this->adviceRequestModel->call($this->json);
     }
 }

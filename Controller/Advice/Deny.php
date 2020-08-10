@@ -1,6 +1,6 @@
 <?php
 
-namespace Riskified\Decider\Controller\Order;
+namespace Riskified\Decider\Controller\Advice;
 
 class Deny extends \Riskified\Decider\Controller\AdviceAbstract
 {
