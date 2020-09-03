@@ -49,7 +49,7 @@ abstract class AbstractTransport {
      */
     public function __construct($signature, $url = null) {
         $this->signature = $signature;
-        $this->url = ($url == null) ? Riskified::getHostByEnv() : $url;
+        $this->url = ($url == null) ? Riskified::getHost() : $url;
         $this->user_agent = 'riskified_php_sdk/' . Riskified::VERSION;
         $this->use_https = Riskified::$env != Env::DEV;
     }
@@ -153,6 +153,11 @@ abstract class AbstractTransport {
      */
     public function deniedCheckout($checkout) {
         return $this->send_checkout($checkout, 'checkout_denied');
+    }
+
+    public function login($login) {
+        $this->url = Riskified::getHost('account');
+        return $this->send_account_event($login, 'login');
     }
 
     public function sendHistoricalOrders($orders) {
