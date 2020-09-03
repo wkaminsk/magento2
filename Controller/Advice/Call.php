@@ -21,7 +21,9 @@ class Call extends \Riskified\Decider\Controller\AdviceAbstract
             return $this->resultJsonFactory->create()->setData(['status' => 9999]);
         }
 
-        $params = $this->request->getParams();
+        $payload = $this->request->getContent();
+        parse_str($payload, $params);
+
         $quoteId = $this->getQuoteId($params['quote_id']);
 
         $quote = $this->cartRespository->get($quoteId);

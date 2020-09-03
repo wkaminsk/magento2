@@ -27,7 +27,6 @@ define([
         },
         preparePayload : function() {
             let payload = {
-                mode: this.mode,
                 quote_id: quote.getQuoteId(),
                 email: quote.guestEmail,
                 gateway: this.gateway
@@ -50,6 +49,11 @@ define([
         },
         registerDenyCallback : function(callback) {
             this.denyCallback = callback;
+
+            return this;
+        },
+        registerFailedCallback : function(callback) {
+            this.failedCallback = callback;
 
             return this;
         },
@@ -76,6 +80,10 @@ define([
                         if (this.disableCallback) {
                             this.disableCallback();
                         }
+                    } else if (apiResponseStatus === 1){
+                        if (this.failedCallback) {
+                            this.failedCallback();
+                        }
                     } else {
                         if (this.successCallback) {
                             this.successCallback();
@@ -91,9 +99,9 @@ define([
             return $.ajax({
                 url: urlBuilder.build(url),
                 type: 'POST',
-                params: payload,
+                data: payload,
                 async: false,
-                contentType: "application/json"
+                contentType: "application/json; charset=utf-8"
             });
         }
     };

@@ -62,6 +62,7 @@ define(
                             .setGateway("adyen_cc")
                             .registerSuccessCallback(successCallback)
                             .registerDenyCallback(denyCallback)
+                            .registerFailedCallback(denyCallback)
                             .registerDisabledCallback(disabledCallback)
                             .validate();
                     } catch(e) {

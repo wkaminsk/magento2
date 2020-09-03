@@ -42,6 +42,7 @@ define([
                         .registerSuccessCallback(generalCallback)
                         .registerDenyCallback(denyCallback)
                         .registerDisabledCallback(disabledCallback)
+                        .registerFailedCallback(disabledCallback)
                         .validate();
                 } catch (e) {
                     return false;
