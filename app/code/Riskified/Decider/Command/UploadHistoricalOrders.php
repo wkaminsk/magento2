@@ -34,7 +34,6 @@ class UploadHistoricalOrders extends Command
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         \Magento\Framework\Api\SearchCriteria $searchCriteriaBuilder
     ) {
-        $state->setAreaCode('adminhtml');
 
         $this->_scopeConfig             = $scopeConfig;
         $this->_orderRepository         = $orderRepository;
@@ -65,7 +64,8 @@ class UploadHistoricalOrders extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-
+        $state->setAreaCode('adminhtml');
+        
         $authToken = $this->_scopeConfig->getValue('riskified/riskified/key', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         $env = constant('\Riskified\Common\Env::' . $this->_scopeConfig->getValue('riskified/riskified/env'));
         $domain = $this->_scopeConfig->getValue('riskified/riskified/domain');
