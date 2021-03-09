@@ -17,6 +17,7 @@ use Riskified\OrderWebhook\Transport\CurlTransport;
 class UploadHistoricalOrders extends Command
 {
     protected $_scopeConfig;
+    protected $_state;
     protected $_orderRepository;
     protected $_searchCriteriaBuilder;
     protected $_orderHelper;
@@ -34,9 +35,8 @@ class UploadHistoricalOrders extends Command
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
         \Magento\Framework\Api\SearchCriteria $searchCriteriaBuilder
     ) {
-        $state->setAreaCode('adminhtml');
-
         $this->_scopeConfig             = $scopeConfig;
+        $this->_state                   = $state;
         $this->_orderRepository         = $orderRepository;
         $this->_searchCriteriaBuilder   = $searchCriteriaBuilder;
 
@@ -65,6 +65,7 @@ class UploadHistoricalOrders extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->_state->setAreaCode('adminhtml');
 
         $authToken = $this->_scopeConfig->getValue('riskified/riskified/key', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
         $env = constant('\Riskified\Common\Env::' . $this->_scopeConfig->getValue('riskified/riskified/env'));
